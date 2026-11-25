@@ -1,0 +1,24 @@
+# PQB_IRAM=1: place the scheme code and the SHA-256 code in IRAM (code) and DRAM
+# (constants) instead of flash, so the hot loops never wait for a flash cache refill.
+# Object names are the source file names without extension; "hash", "wots", and "xmss"
+# match both the SHRINCS and the XMSS files of that name.
+[mapping:pqb_iram]
+archive: libmain.a
+entries:
+    sha2_256 (noflash)
+    slh_sha2 (noflash)
+    slh_dsa (noflash)
+    sha256_ctx_direct (noflash)
+    sha256_ctx_fast (noflash)
+    hash (noflash)
+    wots_c (noflash)
+    uxmss (noflash)
+    pors_fp (noflash)
+    shrincs (noflash)
+    address (noflash)
+    xmss (noflash)
+    xmss_core (noflash)
+    xmss_commons (noflash)
+    wots (noflash)
+    hash_address (noflash)
+    utils (noflash)

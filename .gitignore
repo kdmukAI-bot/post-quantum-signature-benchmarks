@@ -1,0 +1,24 @@
+# Working area and session notes, not published
+var/
+.claude/
+.tmp/
+jade-build.log
+# Python
+.venv/
+__pycache__/
+# Build directories
+/build/
+harness/linux/build/
+harness/esp-idf/build-*/
+harness/pico/build-*/
+# Generator intermediates (the outputs it publishes are under results/)
+scripts/report/out/
+# Run logs and check outputs: local only. The run scripts write here and the generator
+# reads from here; the published figures are in the report, results/summary.csv, and
+# results/derived/.
+results/raw/
+results/verification/
+results/jade_runs.csv
+# Queue run state: the plan lines a queue finished or gave up on
+scripts/**/*.done
+scripts/**/*.failed

@@ -1,0 +1,38 @@
+# Round-4 run plan, Waveshare RP2350 Touch LCD 2 (scripts/r4_rp2350_queue.sh). Mirrors the
+# round-2 ESP32 plans (scripts/r2_plans/esp32*.plan) in round 3's microsecond format, in
+# priority order. Fields: build|set|n.
+# Every row carries its peak stack and heap, so there is no separate memory pass (d).
+# Run with:
+#   scripts/r4_rp2350_queue.sh scripts/r4_plans/rp2350.plan results/raw/rp2350/r4
+#
+# (a) level 3, one core: verification, lattice ops at n=100 (inputs 0 to 99), the round-1
+#     job list (signing, key generation, self-tests); then c-fn-dsa's Cortex-M4 assembly
+build-r4-L3-B-dc0|verify|10
+build-r4-L3-B-dc0|lattice|100
+build-r4-L3-B-dc0|r1|10
+build-r4-L3-L-dc0|verify|10
+build-r4-L3-L-dc0|r1|10
+build-r4-L3cm4-B-dc0|lattice|100
+# (b) levels 1 and 2, one core (level 2 runs the level-1 lattice code, so no lattice set)
+build-r4-L1-B-dc0|verify|10
+build-r4-L1-B-dc0|lattice|100
+build-r4-L1-B-dc0|r1|10
+build-r4-L1-L-dc0|verify|10
+build-r4-L1-L-dc0|r1|10
+build-r4-L2-B-dc0|verify|10
+build-r4-L2-B-dc0|r1|10
+build-r4-L2-L-dc0|verify|10
+build-r4-L2-L-dc0|r1|10
+# (c) two cores, levels 3, 1, 2
+build-r4-L3-B-dc1|verify|10
+build-r4-L3-B-dc1|r1|10
+build-r4-L3-L-dc1|verify|10
+build-r4-L3-L-dc1|r1|10
+build-r4-L1-B-dc1|verify|10
+build-r4-L1-B-dc1|r1|10
+build-r4-L1-L-dc1|verify|10
+build-r4-L1-L-dc1|r1|10
+build-r4-L2-B-dc1|verify|10
+build-r4-L2-B-dc1|r1|10
+build-r4-L2-L-dc1|verify|10
+build-r4-L2-L-dc1|r1|10

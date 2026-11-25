@@ -1,0 +1,5 @@
+# Compiler stack protector overlay (selected with SDKCONFIG_DEFAULTS, listed last):
+# -fstack-protector-strong for every component, as in Blockstream's Jade firmware. An option
+# for native ESP-IDF projects; the SeedSigner MicroPython firmware cannot use it as a global
+# setting (it breaks MicroPython's setjmp/longjmp exception handling).
+CONFIG_COMPILER_STACK_CHECK_MODE_STRONG=y

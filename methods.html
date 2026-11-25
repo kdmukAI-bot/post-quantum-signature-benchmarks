@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methods: Post-quantum signature benchmarks on SeedSigner-class hardware</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/series.css">
+<style>
+/* Page width (owner, 2026-11-24): the series' 72ch column is narrow on a desktop screen.
+   55rem is close to GitHub's 980px content width at the laptop font size; phones are
+   unaffected, since the column already fills the screen there. */
+:root{ --measure:55rem; }
+.tablewrap td.num, .tablewrap th.num{ text-align:right; }
+.tablewrap th{ white-space:normal; font-family:var(--sans); font-size:.86rem;
+  letter-spacing:0; text-transform:none; color:var(--ink); font-weight:650;
+  line-height:1.3; vertical-align:bottom; }
+.tablewrap .nw{ white-space:nowrap; }
+.tablewrap tr.gap td{ height:1.1rem; padding:0; border:0; background:none; }
+.tablewrap td.child{ padding-left:1.9rem; }
+.tablewrap.summary{ max-width:36rem; }
+.tablewrap.summary table{ font-size:1.12rem; }
+.tablewrap.summary td{ padding:.6rem 1rem; vertical-align:baseline; }
+.tablewrap.summary td.child{ padding-left:2rem; }
+.tablewrap.summary td.num{ font-family:var(--sans); font-size:1.4rem; font-weight:700;
+  color:var(--ink); font-variant-numeric:tabular-nums; }
+:root{ --gain:#00875a; --loss:#d64545; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --gain:#1fa37f;
+  --loss:#e35d5d; } }
+:root[data-theme="dark"]{ --gain:#1fa37f; --loss:#e35d5d; }
+.cbars{ margin:1.6rem 0; }
+.cbar-title{ font-family:var(--sans); font-size:1.12rem; font-weight:700; line-height:1.35;
+  color:var(--ink); padding:.7rem .75rem .65rem; background:var(--raised);
+  border-top:3px solid var(--accent); }
+.cbar-grid{ display:grid; grid-template-columns:max-content 1fr; }
+.cbar-row{ display:contents; }
+.cbar-name, .cbar-plot{ border-bottom:1px solid var(--rule); }
+.cbar-name{ padding:.55rem .75rem; font-size:1.04rem; line-height:1.3; white-space:nowrap;
+  display:flex; align-items:center; }
+.cbar-plot{ position:relative; min-height:2.6rem; }
+.cbar-plot::before{ content:""; position:absolute; top:0; bottom:-1px; left:var(--x0);
+  margin-left:-1px; border-left:2px solid var(--ink); }
+.cbar-axis .cbar-name, .cbar-axis .cbar-plot{ border-bottom:1px solid var(--rule-strong); }
+.cbar-axis .cbar-plot{ min-height:2rem; }
+@media (max-width:560px){
+  .cbar-grid{ grid-template-columns:1fr; }
+  .cbar-name{ white-space:normal; border-bottom:0; padding:.5rem .5rem 0; }
+  .cbar-axis .cbar-name{ display:none; }
+  .cbar-plot{ min-height:2.3rem; }
+}
+.cbar{ position:absolute; top:50%; height:20px; margin-top:-10px; }
+.cbar.up{ background:var(--gain); border-radius:0 4px 4px 0; }
+.cbar.down{ background:var(--loss); border-radius:4px 0 0 4px; }
+.cbar-break{ position:absolute; top:-4px; bottom:-4px; width:6px; margin-left:-3px;
+  background:var(--ground); transform:skewX(-24deg); }
+.cbar-val, .cbar-dir{ position:absolute; top:50%; transform:translateY(-50%);
+  white-space:nowrap; }
+.cbar-val{ font-weight:700; font-size:1.12rem; color:var(--ink);
+  font-variant-numeric:tabular-nums; }
+.cbar-val.muted{ font-weight:400; color:var(--muted); font-size:1rem; }
+.cbar-dir{ font-size:.82rem; color:var(--muted); }
+.cbar-note{ font-size:.82rem; color:var(--muted); margin:.6rem 0 .3rem; }
+.cbar-table summary{ cursor:pointer; font-size:.86rem; color:var(--muted); }
+.tablewrap.summary td.num.up{ color:var(--pass); }
+.tablewrap.summary td.num.down{ color:var(--accent); }
+.tablewrap.summary th{ font-size:1rem; }
+.tablewrap.summary caption{ font-size:1.12rem; }
+.tablewrap caption{ caption-side:top; text-align:left; font-family:var(--sans);
+  font-size:1rem; font-weight:700; line-height:1.35; color:var(--ink);
+  padding:.7rem .75rem .65rem; background:var(--raised);
+  border-top:3px solid var(--accent); }
+.tablewrap tr.group td{ background:var(--raised); color:var(--ink); padding-top:.5rem;
+  padding-bottom:.5rem; border-top:1px solid var(--rule-strong);
+  border-bottom:1px solid var(--rule-strong); }
+.tablewrap .fnwrap{ white-space:normal; }
+section.footnotes{ margin-top:3rem; font-size:.86rem; color:var(--muted); }
+section.footnotes ol{ padding-left:1.4rem; }
+hr.footnotes-sep{ border:0; border-top:1px solid var(--rule); margin:3rem 0 1rem; }
+.footnote-ref a, .footnote-backref{ text-decoration:none; }
+</style>
+</head>
+<body>
+<button class="themetoggle" type="button" aria-label="Toggle light and dark theme">&#9681;</button>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Benchmark &middot; Post-quantum signatures on signing-device hardware</p>
+  <h1>Methods: Post-quantum signature benchmarks on SeedSigner-class hardware</h1>
+  <dl class="meta">
+    <div><dt>Updated</dt><dd>2026-11-25</dd></div>
+    <div><dt>Revision</dt><dd><span data-deploy-rev>working copy</span></dd></div>
+    <div><dt>Pages</dt><dd><a href="index.html">Results</a> &middot; <a href="methods.html">Methods</a></dd></div>
+  </dl>
+  <div class="note"><span class="tag">Provenance</span>
+  <p>The benchmark harness, the measurements, and this document were produced by an AI agent (Claude) at the direction of GitHub user <a href="https://github.com/kdmukai">kdmukai</a>. The results have not been independently reviewed.</p></div>
+</header>
+
+<nav class="toc">
+  <span class="tag">Contents</span>
+  <ol start="1">
+    <li><a href="#safeguard-settings">Safeguard settings</a></li>
+    <li><a href="#levels">Levels</a></li>
+    <li><a href="#implementations-and-inputs">Implementations and inputs</a></li>
+    <li><a href="#expected-values">Expected values</a></li>
+    <li><a href="#correctness-and-independent-verification">Correctness and independent verification</a></li>
+    <li><a href="#other-notes">Other notes</a></li>
+  </ol>
+</nav>
+
+<h2 id="safeguard-settings"><a class="anchor" href="#safeguard-settings"><span class="num">1</span>Safeguard settings</a></h2>
+<ul>
+<li><strong>Pi Zero 2 W and Pi Zero:</strong> each board's SDK compiler defaults (<code>sdk-pi02w</code>,
+<code>sdk-armv6</code>) at every level: <code>-fstack-protector-strong</code>, PIE, full RELRO, dynamic
+linking, except that the Pi Zero 2 W's level 2 links OpenSSL's libcrypto statically.</li>
+<li><strong>ESP32:</strong> ESP-IDF's defaults, which also suit MicroPython firmware (it cannot use the
+compiler stack protector):
+<ul>
+<li>FreeRTOS task-stack canary check</li>
+<li>the ESP32-P4 hardware stack guard</li>
+<li>ESP32-S3 memory protection</li>
+<li>assertions on</li>
+<li>no compiler stack protector</li>
+<li>task watchdog off, because the benchmark task runs for minutes without yielding</li>
+</ul>
+</li>
+<li><strong>RP2350:</strong> the Pico SDK's Release defaults, with no compiler stack protector, as on the
+ESP32 boards:
+<ul>
+<li>FreeRTOS's stack overflow check (method 2)</li>
+<li>the port's per-task stack limit register</li>
+<li>a hardware watchdog fed from the tick interrupt, with a fault handler that records the
+fault across the reboot (the counterpart of ESP-IDF's interrupt watchdog and panic
+handler)</li>
+</ul>
+</li>
+</ul>
+<h2 id="levels"><a class="anchor" href="#levels"><span class="num">2</span>Levels</a></h2>
+<p>Every level runs Blockstream's scheme code (jade-hbs @ f5c90a5e) unmodified, with the same
+keys and inputs. Levels differ only in how SHA-256 is computed, build settings, and memory
+placement. On the Pi Zero 2 W, the ESP32 boards, and the RP2350, every level is also run
+with Blockstream's dual-core code paths (&quot;two cores&quot;) <a class="fnref" href="index.html#fn-8">[8]</a> <a class="fnref" href="index.html#fn-9">[9]</a>; XMSS has no dual-core path
+and runs on one core in both builds on the ESP32 boards and the RP2350, and only in the
+one-core build on the Pi Zero 2 W.</p>
+<ul>
+<li><strong>Level 1, portable C:</strong> SHA-256 in plain C for every scheme. Pi Zero 2 W and Pi Zero:
+gcc 13.3 -O2 from each board's SDK, which compiles for that board's CPU. ESP32: ESP-IDF
+performance optimization (-O2); with two cores, both compute in plain C. RP2350: Pico
+SDK 2.3.1 with GCC 14.2.1 at -O2, as on the other boards (the SDK's Release default is
+-O3), code run from flash; with two cores, both compute in plain C.</li>
+<li><strong>Level 2, platform acceleration:</strong> documented platform facilities. Pi Zero 2 W: OpenSSL
+3.4.1 through its public API, the SDK's libcrypto linked statically; libcrypto selects
+its NEON SHA-256 code at run time, as the CPU has no SHA-256 instructions. Pi Zero:
+system OpenSSL 3.4.1 through its public API. ESP32: the SHA unit through ESP-IDF's
+driver functions; with two cores, the second core computes in plain C while the first
+holds the SHA unit. RP2350: the SHA-256 accelerator through the SDK's <code>hardware_sha256</code>
+driver functions <a class="fnref" href="index.html#fn-18">[18]</a>, code run from flash, -O2; with two cores, the second core
+computes in plain C while the first holds the accelerator.</li>
+<li><strong>Level 3, tuned:</strong> Pi Zero 2 W: OpenSSL 3.4.1's NEON SHA-256 block function, called
+directly, with a big-endian single-block copy for SLH-DSA, a native-word-order SHA-256
+API for SHRINCS and XMSS, -O3, and LTO, chosen over the Pi Zero's integer code in a
+screen (<code>docs/knowledge/pi-zero-2w-a53-builds-and-sha256-paths.md</code>). Pi Zero: a modified
+copy of OpenSSL 3.4.1's ARM assembly, the same native-word-order API, -O3, and LTO.
+ESP32: register-level SHA unit access that rewrites only the message words that changed
+(this relies on the unit keeping its message registers, verified on both chips but not
+documented by Espressif), hot code in IRAM, larger caches, and -O3. RP2350:
+register-level accelerator access, the hash-based and SHA-256 code in SRAM, -O3, and the
+ESP32 boards' SHA-256 context code; with two cores, the second core hashes with the Pi
+Zero's level-3 assembly, assembled as Thumb-2. Chosen in a screen of the accelerator
+paths (<code>docs/knowledge/rp2350-sha256-accelerator-no-resume.md</code>) and of code placement.</li>
+<li><strong>Calibration:</strong> Blockstream's unmodified Jade firmware on our ESP32-S3 board, timed on
+the host over USB, as Blockstream measured.</li>
+<li><strong>Lattice schemes:</strong> ML-DSA and FN-DSA run at levels 1 and 3 with those levels' compiler
+settings (level 3: Pi Zero 2 W and Pi Zero -O3 and LTO; ESP32 -O3 and the larger caches,
+with the lattice code left in flash rather than IRAM; RP2350 -O3, with the lattice code
+left in flash), on one core: neither implementation has a dual-core path. Both hash with
+SHAKE, which neither the ESP32 SHA units nor the RP2350's accelerator computes, and on
+the Pi Zero 2 W and Pi Zero no OpenSSL-backed SHAKE path was built, so a level-2 build
+would run the level-1 lattice code; level 2 is not run for them.</li>
+</ul>
+<h2 id="implementations-and-inputs"><a class="anchor" href="#implementations-and-inputs"><span class="num">3</span>Implementations and inputs</a></h2>
+<ul>
+<li><strong>Hash-based schemes:</strong> Blockstream's code in the Jade fork (github.com/DmitriiKJ/Jade,
+branch <code>hash_based_signatures</code>, commit f5c90a5e), unmodified, in every round.</li>
+<li><strong>ML-DSA:</strong> mldsa-native v2.0.0 (PQ Code Package, commit
+834a90d5e846ffa1e1611bd24e160bb2e9b86d35; Apache-2.0 OR ISC OR MIT), unmodified,
+portable C backend. Two configurations: the default, and <code>MLD_CONFIG_REDUCE_RAM</code>
+(&quot;reduced RAM&quot;), which recomputes data instead of keeping it and gives byte-identical
+outputs.</li>
+<li><strong>FN-DSA:</strong> c-fn-dsa by Thomas Pornin (commit 1b858880dcac091b5e5f84f0e4d8617c35ba1392;
+Unlicense, a public-domain dedication), unmodified. It uses native floating point only
+on x86 with SSE2, 64-bit ARM with NEON, and 64-bit RISC-V with the D extension; none of
+the five boards is one of these (the Pi Zero 2 W's Cortex-A53 runs in 32-bit mode), so
+every FN-DSA row, the Pi Zero 2 W's and Pi Zero's included, runs the library's integer
+emulation of floating point.</li>
+<li><strong>Inputs:</strong> run x uses the 32-byte input x (big-endian) as message or key-generation
+seed, as in the first round. Lattice signing uses the key pair generated from input 0,
+with an empty context string.</li>
+</ul>
+<h2 id="expected-values"><a class="anchor" href="#expected-values"><span class="num">4</span>Expected values</a></h2>
+<ul>
+<li>SHRINCS-L stateful signing at swn=140: messages 0 to 9 need 1,923,081 WOTS+C attempts on
+average against the expectation of 6,218,398, so a plain mean over them is not an
+estimate of the expected signing time. On the Pi Zero 2 W and Pi Zero the fit uses the
+swn=140 job alone; on the ESP32 boards and the RP2350 it pools the swn=96 and swn=140
+runs of one job set.</li>
+<li>SHRINCS stateless signing: the method is in the caption of Table D7; per-fit
+coefficients are in <a href="results/derived/stateless_fit.csv"><code>results/derived/stateless_fit.csv</code></a>.</li>
+<li>ML-DSA signing: see the text after Tables D9a and D9b; per-fit coefficients are in
+<a href="results/derived/mldsa_fit.csv"><code>results/derived/mldsa_fit.csv</code></a>.</li>
+</ul>
+<h2 id="correctness-and-independent-verification"><a class="anchor" href="#correctness-and-independent-verification"><span class="num">5</span>Correctness and independent verification</a></h2>
+<ul>
+<li>Correctness, first round: every one-core output matches the Pi Zero level 2 output byte
+for byte (Pi Zero: four other first-round runs, 4,436 rows; ESP32: 32 job sets, 904
+one-core rows). Two-core outputs match too, except SHRINCS signatures, which can differ
+in bytes because the first valid counter found wins. Correctness of that path rests on
+the two-core self-test, which signs and verifies with a consistent key and passed in all
+16 two-core SHRINCS job sets.</li>
+<li>Correctness, rounds 2 to 4: <code>scripts/check_r2.py</code> against the host reference outputs
+over every second-round job used here (234 Pi Zero jobs and 78 complete ESP32 job sets),
+85 complete round-3 jobs and job sets, the 273 round-4 Pi Zero 2 W jobs, and the 39
+round-4 RP2350 job sets used: PASS: 58919/58919 rows pass. Every output equals the
+host's byte for byte except 153 two-core SHRINCS signatures in 44 job groups, where
+Blockstream's dual-core grinding returned a different counter. 91 of them (self-tests
+and stateless signing) verified; the other 62 are SHRINCS-B stateful signatures made
+with the fixed key and SHRINCS-L signatures at swn=96, which cannot be verified
+(Independent verification, below).</li>
+<li>Independent verification (host only, with <code>scripts/slh_dsa_openssl_verify.py</code>,
+<code>scripts/fips205_sha2_check.py</code>, <code>scripts/shrincs_cpp_verify.py</code>,
+<code>scripts/xmss_fixed_key_check.c</code>, and <code>scripts/check_mldsa_openssl.py</code>):
+<ul>
+<li>SLH-DSA-SHA2-128s: OpenSSL 3.5.7, in FIPS 205 pure mode with an empty context and
+deterministic signing, produces byte-identical keys and signatures for inputs 0 to 99
+and verifies its signatures; every first-round SLH-DSA row (1,109 signing, 957 key
+generation, including screening runs) equals OpenSSL's output, and the second round's
+host reference outputs for SLH-DSA-SHA2-128s (100 signatures and 100 keys) equal
+OpenSSL's, which every board's second-round output and the Pi Zero 2 W's and RP2350's
+round-4 outputs equal.</li>
+<li>SPHINCS+ 2^40 (parameters OpenSSL cannot load): a FIPS 205 verifier written from the
+standard, and cross-checked against OpenSSL on SLH-DSA-SHA2-128s, verifies the
+signature of message 0 and reproduces every key generation output; signatures of
+messages 1 to 99 were not checked independently.</li>
+<li>SHRINCS: shrincs-cpp (BlockstreamResearch, commit 7643d953; a second implementation
+from the same group, not independent authorship) fully verifies the self-test
+signatures and every SHRINCS-L signature at swn=140 (messages 0 to 99); signatures
+made with the fixed SHRINCS-B key pass every check short of the final root comparison;
+signatures at swn=96 cannot verify, because both verifiers check the fixed target sum
+140.</li>
+<li>XMSS 2^10: no independent verifier exists for Jade's variant (WOTS+C in place of
+WOTS+, a new OID).</li>
+<li>ML-DSA: OpenSSL 3.5.7 derives the same public keys and byte-identical deterministic
+signatures for all 300 messages checked (3 parameter sets, messages 0 to 99) and
+verifies them.</li>
+<li>FN-DSA: no independent check; c-fn-dsa's own self-tests pass on the host, with native
+floating point and with the emulation the boards use.</li>
+</ul>
+</li>
+<li>In the second round, SHRINCS-L stateful signing at swn=140 checks each signature with
+Jade's verifier (its verified column reads 1, against -1 in the first round); its output
+bytes are unchanged.</li>
+</ul>
+<h2 id="other-notes"><a class="anchor" href="#other-notes"><span class="num">6</span>Other notes</a></h2>
+<ul>
+<li>Pi Zero level 1, swn=140 (first round): run 19 lost 5.0 s of wall time to other
+processes (wall time minus CPU time). Excluding it moves the expected value by 0.2%, so
+all runs are kept.</li>
+<li>The FreeRTOS end-of-stack watchpoint: the checks that stay on cover most of what it
+detects: the ESP32-P4's hardware stack guard panics as soon as the stack pointer leaves
+the running task's stack, and FreeRTOS checks a canary at each context switch. The
+watchpoint adds detection of a store into the last 32 bytes of the stack while the stack
+pointer is still in bounds (<code>docs/knowledge/esp32-p4-stack-watchpoint-cost.md</code>).</li>
+<li>Knowledge notes:
+<ul>
+<li>comparison caveats (timing method, Jade build settings, mbedTLS overhead, SHA-1 in
+Jade's SHRINCS port): <code>docs/knowledge/jade-hbs-benchmark-notes.md</code></li>
+<li>grinding method: <code>docs/knowledge/shrincs-l-grinding-time-method.md</code></li>
+<li>ML-DSA attempts: <code>docs/knowledge/ml-dsa-signing-attempts.md</code></li>
+<li>ESP32 limits for the lattice schemes:
+<code>docs/knowledge/esp32-lattice-scheme-hardware-limits.md</code></li>
+<li>verifying Jade's signatures elsewhere:
+<code>docs/knowledge/verifying-jade-hbs-signatures-elsewhere.md</code></li>
+<li>level 3 methods: <code>docs/knowledge/esp32-sha-unit-register-costs.md</code>,
+<code>docs/knowledge/pi-zero-sha256-speed.md</code>,
+<code>docs/knowledge/pi-zero-2w-a53-builds-and-sha256-paths.md</code>, and
+<code>docs/knowledge/rp2350-sha256-accelerator-no-resume.md</code></li>
+<li>RP2350 port: <code>docs/knowledge/rp2350-pico-sdk-freertos-porting-traps.md</code> and
+<code>docs/knowledge/rp2350-unattended-fault-recovery.md</code></li>
+</ul>
+</li>
+</ul>
+
+
+<footer></footer>
+</div>
+<script>
+(function () {
+  var b = document.querySelector('.themetoggle');
+  if (!b) return;
+  b.addEventListener('click', function () {
+    var cur = document.documentElement.getAttribute('data-theme');
+    if (!cur) cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

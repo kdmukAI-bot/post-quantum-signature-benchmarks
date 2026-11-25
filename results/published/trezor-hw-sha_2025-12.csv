@@ -1,0 +1,13 @@
+# Source: trezor/trezor-firmware, branch cepetr/slh-dsa-hw-sha, branch-notes.md,
+# https://github.com/trezor/trezor-firmware/blob/cepetr/slh-dsa-hw-sha/branch-notes.md
+# (branch head 98920364, 2025-12-11). Linked by andrewkozlik in issue #6835 on 2026-04-29
+# (https://github.com/trezor/trezor-firmware/issues/6835#issuecomment-4344924806), who wrote
+# that the branch "managed to reduced the SLH-DSA-128 signing time to 20 seconds".
+# Retrieved 2026-11-24 through the GitHub API, read only.
+# The notes record a run of the vendored sphincsplus reference code (crypto_sign_bytes 7856,
+# SPHINCS+ SHA2-128s), patched to hash through the STM32U5 HASH unit, in prodtest (Trezor's
+# production-test firmware) on a T3W1 (Trezor Safe 7), with the stack protector disabled:
+# "Signed in 19.657 s". One run. The notes add that the signing time of roughly 20 seconds
+# "is not the lower bound".
+device,model,scheme,op,seconds,as_published
+Trezor Safe 7,T3W1,SPHINCS+ SHA2-128s,sign,19.657,Signed in 19.657 s

@@ -1,0 +1,40 @@
+# Source: Ledger Donjon, "Quantum Computing's Threat to Blockchain" (published
+# 2026-02-26 per the page's metadata),
+# https://www.ledger.com/blog-quantum-computing-threat-to-blockchain
+# Retrieved 2026-11-24 with curl, read only.
+# Table "memory": "Memory Usage (in bytes)", introduced as "the preliminary memory usage
+# results we obtained on the ST33K Secure Element", "with the secure element's generic
+# countermeasures disabled". Table "time": "Execution time (in milliseconds - averages)";
+# the post names no device, clock, or run count for it. Implementations, per the post:
+# Falcon "a non optimized, plain C version"; ML-DSA "ZKNox's low ram implementation".
+table,op,scheme,as_published,value,unit
+memory,Key Generation,Falcon-512,"14,420",14420,bytes
+memory,Key Generation,Falcon-1024,"27,552",27552,bytes
+memory,Key Generation,ML-DSA-44,"46,320",46320,bytes
+memory,Key Generation,ML-DSA-65,"5,712",5712,bytes
+memory,Key Generation,ML-DSA-87,"5,712",5712,bytes
+memory,Signing,Falcon-512,"32,396",32396,bytes
+memory,Signing,Falcon-1024,Not enough RAM,,bytes
+memory,Signing,ML-DSA-44,"6,056",6056,bytes
+memory,Signing,ML-DSA-65,"7,600",7600,bytes
+memory,Signing,ML-DSA-87,"9,128",9128,bytes
+memory,Signature Verification,Falcon-512,"5,268",5268,bytes
+memory,Signature Verification,Falcon-1024,"5,364",5364,bytes
+memory,Signature Verification,ML-DSA-44,"4,088",4088,bytes
+memory,Signature Verification,ML-DSA-65,"4,088",4088,bytes
+memory,Signature Verification,ML-DSA-87,"4,088",4088,bytes
+time,Key Generation,Falcon-512,"1,094",1094,ms
+time,Key Generation,Falcon-1024,"3,735",3735,ms
+time,Key Generation,ML-DSA-44,533,533,ms
+time,Key Generation,ML-DSA-65,"1,046",1046,ms
+time,Key Generation,ML-DSA-87,"1,780",1780,ms
+time,Signing,Falcon-512,835,835,ms
+time,Signing,Falcon-1024,N/A,,ms
+time,Signing,ML-DSA-44,"1,096",1096,ms
+time,Signing,ML-DSA-65,"2,309",2309,ms
+time,Signing,ML-DSA-87,"4,383",4383,ms
+time,Signature Verification,Falcon-512,< 100,,ms
+time,Signature Verification,Falcon-1024,N/A,,ms
+time,Signature Verification,ML-DSA-44,437,437,ms
+time,Signature Verification,ML-DSA-65,808,808,ms
+time,Signature Verification,ML-DSA-87,"1,490",1490,ms

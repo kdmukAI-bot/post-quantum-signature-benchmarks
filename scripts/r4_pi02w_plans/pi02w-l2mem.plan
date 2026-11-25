@@ -1,0 +1,27 @@
+# Round-4 Pi Zero 2 W: level-2 memory pass, rerun with the shared-libcrypto memory builds
+# (r4-pi02w-shrincs<B|L>-openssl-mem, as on the Pi Zero W). The static-libcrypto memory builds
+# of pi02w.plan aborted at process exit (free(): invalid pointer) in all 23 lines. Derived
+# from those 23 lines of pi02w.plan, build and label changed.
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|slh_dsa_verify|10
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|sphincs40_verify|10
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|xmss_verify|10
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_verify|10|2040
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_verify_stateless|10|2040
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_selftest|1|2040
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|xmss_selftest|1
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|slh_dsa_sign|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|sphincs40_sign|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_sign|3|2040
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|xmss_sign|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|slh_dsa_keygen|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|sphincs40_keygen|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_keygen|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|xmss_keygen|3
+r4-pi02w-shrincsB-openssl-mem|r4-L2-mem shrincs-B openssl3.4.1; gcc13.3 -O2|shrincs_sign_stateless|1|2040
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_verify|10|140
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_verify_stateless|10|140
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_selftest|1|140
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_sign|1|140
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_sign|3|96
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_keygen|3
+r4-pi02w-shrincsL-openssl-mem|r4-L2-mem shrincs-L openssl3.4.1; gcc13.3 -O2|shrincs_sign_stateless|1|140

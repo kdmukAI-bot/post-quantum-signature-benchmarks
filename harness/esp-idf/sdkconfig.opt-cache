@@ -1,0 +1,2 @@
+# Cache overlay for the optimization builds (selected with SDKCONFIG_DEFAULTS). The
+# settings are per target, in sdkconfig.opt-cache.<target>.

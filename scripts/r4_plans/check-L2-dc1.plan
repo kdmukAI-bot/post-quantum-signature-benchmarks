@@ -1,0 +1,9 @@
+# Round 4 check (not part of the level results): level 2 on two cores ran
+# SLH-DSA-SHA2-128s signing in 20.75 s against 12.90 s on one core, while the two-core
+# microbenchmark build with the same accelerator path took 12.11 s. Repeat two runs of the
+# round-1 job list on the level-2 two-core build after a fresh flash, then on the same
+# configuration with the hash-based and SHA-256 code in SRAM (build r4x-L2hot-B-dc1).
+#   scripts/r4_rp2350_queue.sh scripts/r4_plans/check-L2-dc1.plan \
+#       results/raw/rp2350/r4/check
+build-r4-L2-B-dc1|r1|2
+build-r4x-L2hot-B-dc1|r1|2

@@ -1,0 +1,21 @@
+# Round-4 run plan, priority (e): SHRINCS stateless signing, measured as on the other
+# boards. Run after rp2350.plan:
+#   scripts/r4_rp2350_queue.sh scripts/r4_plans/rp2350-stateless.plan \
+#       results/raw/rp2350/r4
+# Fields: build|set|n. Run counts are reduced below level 3 on one core, because one run
+# takes 7 to 45 minutes here: n=10 at level 3 on one core,
+# n=6 at level 3 on two cores and at level 2, n=5 at level 1 on one core, and n=3 at level
+# 1 on two cores (the last lines, sample means only). The fits (scripts/grind_fit_r2.py)
+# need at least 5 runs on one core and 6 on two cores.
+build-r4-L3-B-dc0|stateless|10
+build-r4-L3-L-dc0|stateless|10
+build-r4-L3-B-dc1|stateless|6
+build-r4-L3-L-dc1|stateless|6
+build-r4-L2-B-dc0|stateless|6
+build-r4-L2-L-dc0|stateless|6
+build-r4-L2-B-dc1|stateless|6
+build-r4-L2-L-dc1|stateless|6
+build-r4-L1-B-dc0|stateless|5
+build-r4-L1-L-dc0|stateless|5
+build-r4-L1-B-dc1|stateless|3
+build-r4-L1-L-dc1|stateless|3

@@ -1,0 +1,25 @@
+# Source: Blockstream, "Are hardware wallets ready to produce post-quantum signatures?"
+# (2026-08-19), https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/
+# Seconds, cold signing, timed on the host over each wallet's USB interface.
+# Transcribed 2026-11-18 from a text extraction of the article. The SPHINCS+ 2^40 KeyGen row
+# had no values in the extraction. Checked against the live page's HTML on 2026-11-20: in
+# the KeyGen table, each wallet's SLH-DSA-SHA2-128 cell spans the SPHINCS+ 2^40 row too (rowspan="2"), so the
+# article gives one KeyGen figure per wallet for both sets. The sphincs40_keygen row
+# repeats those shared figures. Every other figure here matches the live page.
+# Sign column for Trezor is labeled "Trezor Safe 3/5/7" in the article; KeyGen "Trezor Safe 3".
+# Article footnote: the full SHRINCS KeyGen is the sum of the stateful and stateless KeyGens.
+# The article: "All presented numbers are averages after 100 executions of the
+# corresponding operation." It names no chip per wallet and gives the clocks only as
+# "Different CPU frequency (from 70 to 240 MHz)" (checked in the saved page 2026-11-24).
+op,swn,sig_bytes,jade_plus,trezor_safe_3,ledger_nano_gen5_splus,bitbox02_nova
+slh_dsa_keygen,,,7.06,8.64,15.82,12.7
+sphincs40_keygen,,,7.06,8.64,15.82,12.7
+shrincs_l_keygen,,,1.81,2.35,6.1,3.3
+shrincs_b_keygen,,,18.87,22.8,40.18,28.8
+xmss_keygen,,,57.78,75.64,117.85,79.5
+slh_dsa_sign,,7856,52.85,65.31,120.12,100.1
+sphincs40_sign,,5776,43.28,53.45,94.98,78.4
+shrincs_l_sign,96,1092,3.31,3.01,8.04,5.5
+shrincs_l_sign,140,1092,225.63,264.74,572.78,334.6
+shrincs_b_sign,2040,324,21.75,25.82,41.83,30.9
+xmss_sign,,696,57.8,75.63,118.2,79.6

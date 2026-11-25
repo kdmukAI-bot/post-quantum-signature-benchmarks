@@ -1,0 +1,74 @@
+name: Pages (post-quantum signature benchmarks)
+
+# Publishes the repository root as the report site, using the official GitHub Pages
+# actions. index.html and methods.html are generated locally by scripts/report/ and
+# committed; the raw result files they link are served exactly as committed. The one
+# deviation from verbatim: the revision-stamp step substitutes the deployed commit SHA into
+# pages carrying the `data-deploy-rev` placeholder, so reviewers can cite the revision
+# they read.
+#
+# Deploys ONLY on push to main or manual dispatch. There is no `pull_request` trigger, so
+# nothing is published from an unmerged branch.
+#
+# Security posture:
+#   - Top-level token is read-only. The deploy job adds only the Pages-publish scopes
+#     (pages: write + id-token: write). Nothing takes contents: write and nothing pushes
+#     to a branch.
+#   - Actions are pinned to commit SHAs.
+#   - A single job: no step runs project code, only checkout, a fixed sed expression over
+#     static HTML (the revision stamp), and packaging. Split it into build and deploy jobs
+#     if a step that runs project code is ever added.
+#   - Submodules are not checked out; the pages do not link into them.
+#
+# One-time setup, done in the repository settings and not expressible here:
+#   Settings -> Pages -> Build and deployment -> Source = "GitHub Actions".
+#   Optionally restrict the `github-pages` environment to `main`
+#   (Settings -> Environments).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+
+      # Stamp the deployed commit into every page carrying the revision placeholder (the
+      # masthead "Revision" entry). In a raw checkout the placeholder reads "working copy".
+      - name: Stamp deployed revision into pages
+        run: |
+          short="${GITHUB_SHA:0:8}"
+          link="<a data-deploy-rev href=\"https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}\">${short}</a>"
+          find . -name '*.html' -not -path './.git/*' -print0 |
+            xargs -0 sed -i "s|<span data-deploy-rev>working copy</span>|${link}|g"
+
+      # The repository root is the site root. The upload action leaves out .git, .github,
+      # and other dotfiles by default.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0

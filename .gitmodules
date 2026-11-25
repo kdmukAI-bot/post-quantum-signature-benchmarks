@@ -1,0 +1,9 @@
+[submodule "third_party/jade-hbs"]
+	path = third_party/jade-hbs
+	url = https://github.com/DmitriiKJ/Jade.git
+[submodule "third_party/mldsa-native"]
+	path = third_party/mldsa-native
+	url = https://github.com/pq-code-package/mldsa-native.git
+[submodule "third_party/c-fn-dsa"]
+	path = third_party/c-fn-dsa
+	url = https://github.com/pornin/c-fn-dsa.git

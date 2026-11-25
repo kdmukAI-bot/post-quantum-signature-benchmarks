@@ -1,0 +1,18 @@
+# Source: pqm4 (github.com/mupq/pqm4), results/speed/slh-dsa.md and results/speed/ml-dsa.md
+# at master 0dd10ee5 (2026-11-09), retrieved 2026-11-24 with curl, read only. Each page
+# states its commit, date, platform, clock, and iterations (copied per row below). Cycle counts are published as AVG, MIN, and MAX.
+# pqm4's FN-DSA figures (fndsa_provisional) are only in benchmarks.md, whose clock the
+# README gives as 24 MHz while these pages state 20 MHz; they are not transcribed here.
+page,commit,date,platform,clock_mhz,iterations,scheme,implementation,op,avg_cycles,min_cycles,max_cycles
+results/speed/slh-dsa.md,7a629261b9cb0c463ff4907255b092a6e2ff4ec4,Sat Nov  7 15:34:05 2026,nucleo-l4r5zi,20,10,slh-dsa-sha2-128s,ref,keygen,997965725,997964928,997965862
+results/speed/slh-dsa.md,7a629261b9cb0c463ff4907255b092a6e2ff4ec4,Sat Nov  7 15:34:05 2026,nucleo-l4r5zi,20,10,slh-dsa-sha2-128s,ref,sign,7583035314,7583034397,7583035925
+results/speed/slh-dsa.md,7a629261b9cb0c463ff4907255b092a6e2ff4ec4,Sat Nov  7 15:34:05 2026,nucleo-l4r5zi,20,10,slh-dsa-sha2-128s,ref,verify,7469531,7356716,7715620
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,clean,keygen,1794242,1758149,1834091
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,clean,sign,7492483,3064633,29188755
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,clean,verify,1951884,1951562,1952292
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4f,keygen,1420177,1386191,1451394
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4f,sign,3813254,1807527,14313819
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4f,verify,1420317,1419638,1420929
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4fstack,keygen,1793492,1708314,1892955
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4fstack,sign,12248558,3885639,49576620
+results/speed/ml-dsa.md,b6ec2a12f00d2aff83b77d21b37f8777499c1a91,Fri Oct 23 00:21:00 EDT 2026,nucleo-l4r5zi,20,100,ml-dsa-44,m4fstack,verify,3259593,3228643,3295621

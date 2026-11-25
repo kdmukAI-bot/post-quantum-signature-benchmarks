@@ -1,0 +1,3 @@
+# ESP32-P4 only: 512 KB L2 cache with 128 B lines (the only line size at 512 KB)
+CONFIG_CACHE_L2_CACHE_512KB=y
+CONFIG_CACHE_L2_CACHE_LINE_128B=y

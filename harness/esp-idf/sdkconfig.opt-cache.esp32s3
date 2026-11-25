@@ -1,0 +1,6 @@
+# ESP32-S3: largest instruction and data caches (defaults: 16 KB / 32 B lines and
+# 32 KB / 32 B lines). The instruction cache line cannot exceed 32 B at 32 KB.
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_ESP32S3_INSTRUCTION_CACHE_LINE_32B=y
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y

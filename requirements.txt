@@ -1,0 +1,11 @@
+# Python packages for the scripts, installed in a virtual environment:
+#   python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
+# Report generator and page builder (scripts/report/)
+markdown-it-py==3.0.0
+mdit-py-plugins==0.4.2
+mdurl==0.1.2
+# Serial capture from the ESP32 and RP2350 boards (scripts/esp_capture.py)
+pyserial==3.5
+# Jade firmware calibration runs (scripts/run_jade_bench.py, with
+# third_party/jade-hbs/jadepy)
+cbor2==5.9.0
