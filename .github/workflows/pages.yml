@@ -2,22 +2,25 @@ name: Pages (post-quantum signature benchmarks)
 
 # Publishes the repository root as the report site, using the official GitHub Pages
 # actions. index.html and methods.html are generated locally by scripts/report/ and
-# committed; the raw result files they link are served exactly as committed. The one
-# deviation from verbatim: the revision-stamp step substitutes the deployed commit SHA into
-# pages carrying the `data-deploy-rev` placeholder, so reviewers can cite the revision
-# they read.
+# committed; the result files they link are served exactly as committed. The one
+# deviation from verbatim: the revision-stamp step substitutes the deployed commit SHA
+# into pages carrying the `data-deploy-rev` placeholder, so reviewers can cite the
+# revision they read.
 #
 # Deploys ONLY on push to main or manual dispatch. There is no `pull_request` trigger, so
 # nothing is published from an unmerged branch.
 #
 # Security posture:
-#   - Top-level token is read-only. The deploy job adds only the Pages-publish scopes
+#   - Top-level token is read-only. Only the deploy job adds the Pages-publish scopes
 #     (pages: write + id-token: write). Nothing takes contents: write and nothing pushes
 #     to a branch.
 #   - Actions are pinned to commit SHAs.
-#   - A single job: no step runs project code, only checkout, a fixed sed expression over
-#     static HTML (the revision stamp), and packaging. Split it into build and deploy jobs
-#     if a step that runs project code is ever added.
+#   - Two jobs. The build job runs no project code, only checkout, a fixed sed expression
+#     over static HTML (the revision stamp), and packaging, with a read-only token. The
+#     deploy job publishes the uploaded artifact and runs nothing else. With upload and
+#     deploy in one job, the deploy step looked the artifact up before GitHub had
+#     registered it and failed until rerun; a separate job starts after the upload has
+#     finished.
 #   - Submodules are not checked out; the pages do not link into them.
 #
 # One-time setup, done in the repository settings and not expressible here:
@@ -38,23 +41,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 1
 
-      # Stamp the deployed commit into every page carrying the revision placeholder (the
-      # masthead "Revision" entry). In a raw checkout the placeholder reads "working copy".
+      # Stamp the deployed commit into every page carrying the revision placeholder
+      # (the masthead "Revision" entry). In a raw checkout the placeholder reads
+      # "working copy".
       - name: Stamp deployed revision into pages
         run: |
           short="${GITHUB_SHA:0:8}"
@@ -69,6 +68,16 @@ jobs:
         with:
           path: .
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
