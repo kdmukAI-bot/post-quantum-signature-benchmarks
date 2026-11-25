@@ -20,8 +20,8 @@ hardware wallets in Blockstream's tests:
 
 {{C1}}
 
-Averaged over SLH-DSA-SHA2-128s and SHRINCS-B stateful signing; the Trezor Safe 7 row
-covers one scheme. The Pi Zero 2 W ran at 1 GHz{{fn:pi2-clock}}. The wallet figures are
+Averaged over SLH-DSA-SHA2-128s and SPHINCS+ 2^40 signing{{fn:shrincs-draft}}; the Trezor
+Safe 7 row covers one scheme. The Pi Zero 2 W ran at 1 GHz{{fn:pi2-clock}}. The wallet figures are
 Blockstream's, timed differently from ours; Table H5 has the per-scheme times.
 
 ### SeedSigner's current and future hardware signs in seconds
@@ -81,15 +81,9 @@ Methods: the [methods page](../methods.html).
 
 ### Signing time by scheme and board
 
-Which rows matter:
-
-- **A device that keeps no state between sessions** (SeedSigner, or any device restored
-  from a seed backup): the stateless rows, plus key generation each session (section 3.1).
-- **A device that keeps a counter it can never lose or reuse:** the stateful rows.
-- **A device short on RAM:** [section 3.4](#34-peak-stack-and-heap).
-
-Signing time at level 3 on one core, rounded to at most three significant figures;
-full figures and statistics follow in sections 3.1 to 3.4.
+Signing time at level 3 on one core, rounded to at most three significant figures. Full
+figures and statistics follow in sections 3.1 to 3.3; for devices short on RAM, peak stack
+and heap are in [section 3.4](#34-peak-stack-and-heap).
 
 **Table K1. Signing time per scheme on five boards: level 3, one core**
 
@@ -97,10 +91,16 @@ full figures and statistics follow in sections 3.1 to 3.4.
 
 {{K1_NOTE}}
 
+SHRINCS-B and SHRINCS-L, the earlier SHRINCS design that Blockstream timed, appear only in
+the detail tables.
+
 Number format{{fn:number-format}}: one unit per table, seconds for hash-based signing and
 key generation, milliseconds for verification and the lattice schemes.
 
 ### 3.1 Hash-based signing and key generation
+
+The SHRINCS-B and SHRINCS-L rows time the earlier SHRINCS design in Blockstream's Jade
+code, not the current draft{{fn:shrincs-draft}}.
 
 {{HASH_TABLES}}
 
@@ -110,12 +110,12 @@ Level-1 time divided by level-3 time, one core, from Tables {{HASH_RANGE}}.
 
 {{D6}}
 
-SHRINCS stateless signing, expected value per message ± its standard error (seconds), from
-a fit over messages 0 to 9 (n=10){{fn:stateless-fit}}{{fn:stateless-n}}. The ± covers the
+Stateless signing in the earlier SHRINCS design (PORS+FP), expected value per message ±
+its standard error (seconds), from a fit over messages 0 to 9 (n=10){{fn:stateless-fit}}{{fn:stateless-n}}. The ± covers the
 fit only, not the spread between messages: single messages took {{D7_SPREAD_LO}} to
 {{D7_SPREAD_HI}} times the expected value.{{D7_WIDE}} Fit coefficients: {{CSV_STATELESS}}.
 
-**Table D7. SHRINCS stateless signing on five boards, expected seconds per message, by level and cores**
+**Table D7. SHRINCS stateless signing (earlier design) on five boards, expected seconds per message, by level and cores**
 
 {{D7}}
 
@@ -138,7 +138,7 @@ the comparison is approximate {{fn:h5-method}}.
 
 - **Our boards:** level 3 (each board's tuned build, [section 2.1](#21-processors-and-levels)), one core, timed on the device.
 - **Other reports:** figures as published; their code, run counts, and timing methods differ.
-- **Hash hardware:** on the Jade Plus, Blockstream's SLH-DSA path hashes in portable C, and its SHRINCS and XMSS paths hash through mbedTLS and the ESP32-S3's SHA unit (Table D18); on the other three wallets the harness hashes in portable C. Of those wallets' chips, only the Trezors' STM32U585 and STM32U5G9 (in the Safe 3 rev B, Safe 5, and Safe 7: a HASH unit that shipping firmware restricts to secure, privileged code) and the BitBox02 Nova's SAMD51 (its ICM) have SHA-256 hardware; the STM32F427 and the ST33K have none, and no device in any report has Keccak hardware ([`docs/other-devices-hash-hardware.md`](../docs/other-devices-hash-hardware.md)).
+- **Hash hardware:** on the Jade Plus, Blockstream's SLH-DSA-SHA2-128s and SPHINCS+ 2^40 code hashes in portable C, and its SHRINCS and XMSS code hashes through mbedTLS and the ESP32-S3's SHA unit (Table D18); on the other three wallets the harness hashes in portable C. Of those wallets' chips, only the Trezors' STM32U585 and STM32U5G9 (in the Safe 3 rev B, Safe 5, and Safe 7: a HASH unit that shipping firmware restricts to secure, privileged code) and the BitBox02 Nova's SAMD51 (its ICM) have SHA-256 hardware; the STM32F427 and the ST33K have none, and no device in any report has Keccak hardware ([`docs/other-devices-hash-hardware.md`](../docs/other-devices-hash-hardware.md)).
 - **A dash:** the source did not measure that scheme.
 
 {{fndef:h5-method}} Table H5 in detail. Figures are rounded to two significant figures. Our
@@ -159,7 +159,7 @@ reference C libraries on every wallet, glued to each wallet's own hash functions
 Donjon used a plain C Falcon and a low-RAM ML-DSA; pqm4's rows are its portable C
 implementations; the Trezor Model T ran PQClean's reference code, with PQClean's own SHA-2
 and SHA-3. Hash hardware: at level 3 our ESP32 boards and the RP2350 hash with
-the chip's SHA-256 hardware, while Jade's SLH-DSA path on the Jade Plus hashes in portable C; Table
+the chip's SHA-256 hardware, while Jade's SLH-DSA-SHA2-128s and SPHINCS+ 2^40 code on the Jade Plus hashes in portable C; Table
 D18 times Jade's own firmware on our ESP32-S3 board
 ([section 3.6](#36-reproducibility-cost-of-safeguards-and-jade-firmware-calibration)).
 
@@ -752,6 +752,17 @@ handling.
 {{fndef:ssp-neg}} {{COST_SSP_NOTE}}
 
 {{fndef:pi2-clock}} {{FN_PI2_CLOCK}}
+
+{{fndef:shrincs-draft}} The current SHRINCS draft
+([SHRINCS/shrincs-bip](https://github.com/SHRINCS/shrincs-bip)) signs on its stateless path
+with SLH-DSA at h=45, d=5, h'=9, k=10, a=13, and w=16, the parameters of the set that
+Blockstream's post calls SPHINCS+ 2^40. The SPHINCS+ 2^40 rows therefore time that path,
+apart from a few hash calls in message hashing (not checked against the draft's test
+vectors). SHRINCS-B and SHRINCS-L time Blockstream's code in the Jade fork: the earlier
+design behind Blockstream's published figures, not the current draft. Its stateful path
+uses other WOTS+C parameters (SHRINCS-B: 16 chains with w=256; SHRINCS-L: 64 chains with
+w=4; the current draft has one parameter set, 32 chains with w=16), and its stateless path
+uses PORS+FP instead of SLH-DSA.
 
 {{fndef:pi2-dual}} On the Pi Zero 2 W, Blockstream's dual-core code paths run over a stand-in
 for the FreeRTOS task calls they use, built on POSIX threads: one persistent worker thread

@@ -21,19 +21,19 @@ hardware wallets in Blockstream's tests:
 
 | Device | Relative to the Jade Plus [1] |
 |---|---|
-| Pi Zero 2 W | +27x |
-| Pi Zero | +13x |
-| ESP32-P4 | +9.4x |
-| ESP32-S3 | +7.8x |
-| RP2350 | +5.8x |
+| Pi Zero 2 W | +22x |
+| Pi Zero | +11x |
+| ESP32-P4 | +8.7x |
+| ESP32-S3 | +7.3x |
+| RP2350 | +5.5x |
 | Trezor Safe 7 (test build) [2] | +2.7x |
 | Jade Plus (baseline) | 1.0x |
 | Trezor Safe 3/5/7 | −1.2x |
-| BitBox02 Nova | −1.6x |
-| Ledger Nano gen5/S+ | −2.1x |
+| BitBox02 Nova | −1.9x |
+| Ledger Nano gen5/S+ | −2.2x |
 
-Averaged over SLH-DSA-SHA2-128s and SHRINCS-B stateful signing; the Trezor Safe 7 row
-covers one scheme. The Pi Zero 2 W ran at 1 GHz [3]. The wallet figures are Blockstream's,
+Averaged over SLH-DSA-SHA2-128s and SPHINCS+ 2^40 signing [3]; the Trezor Safe 7 row
+covers one scheme. The Pi Zero 2 W ran at 1 GHz [4]. The wallet figures are Blockstream's,
 timed differently from ours; Table 11 has the per-scheme times.
 
 ### SeedSigner's current and future hardware signs in seconds
@@ -47,8 +47,8 @@ saved between signatures:
 ### Can the wallets go faster?
 
 - **Same chip, different result:** the Jade Plus uses the same chip as our ESP32-S3 board,
-  yet our build signs about 6 to 8 times as fast, largely by making better use of the
-  chip's SHA-256 hardware.
+  yet our build signs about 7 times as fast, largely by making better use of the chip's
+  SHA-256 hardware.
 - **Trezor too:** a Trezor developer's test firmware signed about 3 times as fast as
   Blockstream's Trezor figure, using a hash unit that production Trezor firmware does not
   let applications use [2].
@@ -63,16 +63,16 @@ The full results, with run counts and every measured figure, follow in section 3
 | Item | Details |
 |---|---|
 | Boards | Pi Zero 2 W: BCM2710A1, four Cortex-A53 cores, run in 32-bit mode, 1 GHz<br>Pi Zero: BCM2835, one ARM1176JZF-S core, 1 GHz<br>ESP32-P4: chip revision v3.2, two cores, 400 MHz<br>ESP32-S3: chip revision v0.2, two cores, 240 MHz<br>RP2350: two Arm Cortex-M33 cores, 150 MHz |
-| Hash-based schemes and signature sizes | SLH-DSA-SHA2-128s: 7,856-byte signatures<br>SPHINCS+ 2^40: 5,776 bytes<br>SHRINCS-B and SHRINCS-L, stateful: 324 and 1,092 bytes [4]<br>SHRINCS-B and SHRINCS-L, stateless: 2,568 and 4,104 bytes<br>XMSS 2^10: 696 bytes<br>implementation: Blockstream's code in the Jade fork (jade-hbs @ f5c90a5e), with two build-time edits (methods page, Implementations and inputs) |
-| Lattice schemes and signature sizes | ML-DSA-44, -65, and -87: 2,420, 3,309, and 4,627 bytes; mldsa-native v2.0.0, default and reduced-RAM configurations<br>FN-DSA-512 and -1024: 666 and 1,280 bytes [5]; c-fn-dsa @ 1b858880 |
+| Hash-based schemes and signature sizes | SLH-DSA-SHA2-128s: 7,856-byte signatures<br>SPHINCS+ 2^40: 5,776 bytes<br>SHRINCS-B and SHRINCS-L (an earlier SHRINCS design [3]), stateful: 324 and 1,092 bytes [5]<br>SHRINCS-B and SHRINCS-L, stateless: 2,568 and 4,104 bytes<br>XMSS 2^10: 696 bytes<br>implementation: Blockstream's code in the Jade fork (jade-hbs @ f5c90a5e), with two build-time edits (methods page, Implementations and inputs) |
+| Lattice schemes and signature sizes | ML-DSA-44, -65, and -87: 2,420, 3,309, and 4,627 bytes; mldsa-native v2.0.0, default and reduced-RAM configurations<br>FN-DSA-512 and -1024: 666 and 1,280 bytes [6]; c-fn-dsa @ 1b858880 |
 | Operations | key generation<br>signing<br>verification<br>peak stack and heap |
 | Settings | level 1: SHA-256 in portable C<br>level 2: each platform's SHA-256 acceleration<br>level 3: tuned SHA-256 code, compiler settings, and memory placement<br>one and two cores on the Pi Zero 2 W, the ESP32 boards, and the RP2350<br>each platform's default safeguards |
 
 ### 2.1 Processors and levels
 
-| Board [6] | Processor | Clock | RAM |
+| Board [7] | Processor | Clock | RAM |
 |---|---|---|---|
-| Pi Zero 2 W | BCM2710A1, four Cortex-A53 cores, run in 32-bit mode; NEON, no SHA-256 instructions | 1 GHz (cycle-counter checks: 1,000 MHz), set with `force_turbo=1` [3] | 440,588 KiB visible to Linux (512 MB on the board) |
+| Pi Zero 2 W | BCM2710A1, four Cortex-A53 cores, run in 32-bit mode; NEON, no SHA-256 instructions | 1 GHz (cycle-counter checks: 1,000 MHz), set with `force_turbo=1` [4] | 440,588 KiB visible to Linux (512 MB on the board) |
 | Pi Zero | BCM2835, one ARM1176JZF-S core | 1 GHz (cycle-counter checks: 997 to 1,001 MHz), set with `force_turbo=1`, as in SeedSigner OS's Pi Zero image | 475,896 KiB visible to Linux |
 | ESP32-P4 | ESP32-P4 (chip revision v3.2), two cores | 400 MHz | internal heap free before a job set: about 589,000 bytes at level 1 and 422,000 at level 3 |
 | ESP32-S3 | ESP32-S3 (chip revision v0.2), two cores | 240 MHz | internal heap free before a job set: about 384,000 bytes at level 1 and 305,000 at level 3 |
@@ -84,11 +84,11 @@ The full results, with run counts and every measured figure, follow in section 3
 | 2, platform acceleration | OpenSSL 3.4.1 through its public API, linked statically from the SDK; it selects its NEON SHA-256 code at run time | the system OpenSSL 3.4.1 through its public API | the SHA unit through ESP-IDF's driver functions | the SHA-256 accelerator through the SDK's hardware_sha256 driver functions |
 | 3, tuned | a modified copy of OpenSSL 3.4.1's NEON SHA-256 code; a native-word-order SHA-256 API; -O3; LTO | a modified copy of OpenSSL 3.4.1's ARM assembly; a native-word-order SHA-256 API; -O3; LTO | register-level SHA unit access; hot hash-based code in IRAM; larger caches; -O3 | register-level accelerator access; hash-based and SHA-256 code in SRAM; -O3 |
 
-- **Lattice schemes:** levels 1 and 3, one core [7].
+- **Lattice schemes:** levels 1 and 3, one core [8].
 - **Two cores:** on the Pi Zero 2 W, the ESP32 boards, and the RP2350, every level also
   runs Blockstream's dual-core code paths for the hash-based schemes, which Jade's release
-  builds leave compiled out [8] [9].
-- **Safeguards:** each platform's defaults [10] [11]; other settings and their cost are in
+  builds leave compiled out [9] [10].
+- **Safeguards:** each platform's defaults [11] [12]; other settings and their cost are in
   section 3.6.
 
 Methods: the [methods page](../methods.html).
@@ -97,15 +97,9 @@ Methods: the [methods page](../methods.html).
 
 ### Signing time by scheme and board
 
-Which rows matter:
-
-- **A device that keeps no state between sessions** (SeedSigner, or any device restored
-  from a seed backup): the stateless rows, plus key generation each session (section 3.1).
-- **A device that keeps a counter it can never lose or reuse:** the stateful rows.
-- **A device short on RAM:** [section 3.4](#34-peak-stack-and-heap).
-
-Signing time at level 3 on one core, rounded to at most three significant figures; full
-figures and statistics follow in sections 3.1 to 3.4.
+Signing time at level 3 on one core, rounded to at most three significant figures. Full
+figures and statistics follow in sections 3.1 to 3.3; for devices short on RAM, peak stack
+and heap are in [section 3.4](#34-peak-stack-and-heap).
 
 **Table 2. Signing time per scheme on five boards: level 3, one core**
 
@@ -113,29 +107,31 @@ figures and statistics follow in sections 3.1 to 3.4.
 |---|---|---|---|---|---|
 | **Stateless: nothing to keep between signatures** |  |  |  |  |  |
 | SLH-DSA-SHA2-128s | 2.48 s | 5.03 s | 6.20 s | 7.34 s | 9.74 s |
-| SPHINCS+ 2^40 | 1.93 s | 3.91 s | 4.89 s | 5.79 s | 7.71 s |
-| SHRINCS-B, stateless | 111 s* | 209 s* | 356 s* | 458 s* | 639 s* |
-| SHRINCS-L, stateless | 77.5 s* | 146 s* | 251 s* | 344 s* | 485 s* |
+| SPHINCS+ 2^40 [3] | 1.93 s | 3.91 s | 4.89 s | 5.79 s | 7.71 s |
 | **Stateful: the device must never lose or reuse its counter** |  |  |  |  |  |
-| SHRINCS-B [12] | 0.656 s | 1.27 s | 2.08 s | 2.56 s | 3.56 s |
-| SHRINCS-L, swn=140 [13] | 9.89 s* | 19.8 s* | 31.3 s* | 45.7 s* | 68.1 s* |
-| XMSS 2^10 [12] | 2.16 s | 4.08 s | 7.20 s | 9.54 s | 12.3 s |
+| XMSS 2^10 [13] | 2.16 s | 4.08 s | 7.20 s | 9.54 s | 12.3 s |
 | **Lattice (stateless) [14]** |  |  |  |  |  |
 | ML-DSA-44 | 5.10 ms* | 9.15 ms* | 23.3 ms* | 40.4 ms* | 54.2 ms* |
 | ML-DSA-65 | 8.12 ms* | 14.6 ms* | 36.9 ms* | 66.0 ms* | 82.8 ms* |
 | ML-DSA-87 | 10.3 ms* | 18.6 ms* | 48.3 ms* | 86.9 ms* | 106 ms* |
-| FN-DSA-512 [5] | 22.5 ms | 44.1 ms | 105 ms | 190 ms | 317 ms |
-| FN-DSA-1024 [5] | 48.8 ms | 96.4 ms | 227 ms | 411 ms | 685 ms |
+| FN-DSA-512 [6] | 22.5 ms | 44.1 ms | 105 ms | 190 ms | 317 ms |
+| FN-DSA-1024 [6] | 48.8 ms | 96.4 ms | 227 ms | 411 ms | 685 ms |
 
 \* Expected value per message: the signing time varies by message, and the figure comes
 from a fit over the measured messages (sections 3.1 and 3.3).
+
+SHRINCS-B and SHRINCS-L, the earlier SHRINCS design that Blockstream timed, appear only in
+the detail tables.
 
 Number format [15]: one unit per table, seconds for hash-based signing and key generation,
 milliseconds for verification and the lattice schemes.
 
 ### 3.1 Hash-based signing and key generation
 
-Means of n=100 runs over inputs 0 to 99 [13]. The SHRINCS-L expected value's ± is the
+The SHRINCS-B and SHRINCS-L rows time the earlier SHRINCS design in Blockstream's Jade
+code, not the current draft [3].
+
+Means of n=100 runs over inputs 0 to 99 [16]. The SHRINCS-L expected value's ± is the
 fit's standard error, not the spread between messages: at level 3 on one core, single
 messages at swn=140 took 0.11 to 71 s. XMSS 2^10 has no two-core path and was run in the
 one-core build only, so its two-core cells read n/a.
@@ -151,14 +147,14 @@ seconds, by level and cores**
 | SHRINCS-B, stateful | 1.207 | 0.6125 | 0.9535 | 0.4818 | 0.6559 | 0.3346 |
 | SHRINCS-L, stateful, swn=140 (expected) | 17.34 ± 0.0004 | 8.744 ± 0.0003 | 14.44 ± 0.0003 | 7.241 ± 0.0006 | 9.890 ± 0.00004 | 4.992 ± 0.00009 |
 | XMSS 2^10 | 3.770 | n/a | 2.891 | n/a | 2.157 | n/a |
-| **Key generation [16]** |  |  |  |  |  |  |
+| **Key generation [17]** |  |  |  |  |  |  |
 | SLH-DSA-SHA2-128s | 0.5320 | 0.2784 | 0.3506 | 0.1905 | 0.3225 | 0.1712 |
 | SPHINCS+ 2^40 | 0.5320 | 0.2785 | 0.3506 | 0.1904 | 0.3228 | 0.1708 |
 | SHRINCS-B | 1.205 | 0.6066 | 0.9393 | 0.4781 | 0.6558 | 0.3343 |
 | SHRINCS-L | 0.1086 | 0.06043 | 0.08669 | 0.04661 | 0.05955 | 0.03371 |
 | XMSS 2^10 | 3.767 | n/a | 2.903 | n/a | 2.154 | n/a |
 
-Means of n=100 runs over inputs 0 to 99 [13] [17]. The SHRINCS-L expected value's ± is the
+Means of n=100 runs over inputs 0 to 99 [16] [18]. The SHRINCS-L expected value's ± is the
 fit's standard error, not the spread between messages: at level 3 on one core, single
 messages at swn=140 took 0.22 to 140 s.
 
@@ -173,7 +169,7 @@ by level, one core**
 | SHRINCS-B, stateful | 1.881 | 1.759 | 1.271 |
 | SHRINCS-L, stateful, swn=140 (expected) | 27.04 ± 0.003 | 25.44 ± 0.003 | 19.81 ± 0.003 |
 | XMSS 2^10 | 5.924 | 5.547 | 4.081 |
-| **Key generation [16]** |  |  |  |
+| **Key generation [17]** |  |  |  |
 | SLH-DSA-SHA2-128s | 0.8514 | 0.7515 | 0.6553 |
 | SPHINCS+ 2^40 | 0.8518 | 0.7513 | 0.6555 |
 | SHRINCS-B | 1.886 | 1.762 | 1.275 |
@@ -224,7 +220,7 @@ level and cores**
 | SHRINCS-L | 1.015 | 0.6825 | 0.3562 | 0.3130 | 0.2537 | 0.2098 |
 | XMSS 2^10 | 33.72 | 33.72 | 12.65 | 12.65 | 9.536 | 9.536 |
 
-Means of n=10 runs over inputs 0 to 9 [18] [19]. The SHRINCS-L expected value's ± is the
+Means of n=10 runs over inputs 0 to 9 [19] [20]. The SHRINCS-L expected value's ± is the
 fit's standard error, not the spread between messages: at level 3 on one core, single
 messages at swn=140 took 3.5 to 54 s. XMSS 2^10 has no two-core path: its two-core cells
 time it on one core of the two-core build.
@@ -267,17 +263,17 @@ core**
 | SHRINCS-L | 1.82 | 1.48 | 3.25 | 4.00 | 3.88 |
 | XMSS 2^10 | 1.75 | 1.45 | 2.95 | 3.54 | 3.57 |
 
-SHRINCS stateless signing, expected value per message ± its standard error (seconds), from
-a fit over messages 0 to 9 (n=10) [20] [21]. The ± covers the fit only, not the spread
-between messages: single messages took 0.34 to 1.6 times the expected value. The larger
-standard errors of two-core SHRINCS-B (the Pi Zero 2 W at levels 2 and 3 and the RP2350 at
-level 2) come from the fit: the few WOTS+C attempts at swn=2040 are split between the
-cores by counter parity, and over these messages the two per-core counts vary too little
-to fix their terms. Fit coefficients:
+Stateless signing in the earlier SHRINCS design (PORS+FP), expected value per message ±
+its standard error (seconds), from a fit over messages 0 to 9 (n=10) [21] [22]. The ±
+covers the fit only, not the spread between messages: single messages took 0.34 to 1.6
+times the expected value. The larger standard errors of two-core SHRINCS-B (the Pi Zero 2
+W at levels 2 and 3 and the RP2350 at level 2) come from the fit: the few WOTS+C attempts
+at swn=2040 are split between the cores by counter parity, and over these messages the two
+per-core counts vary too little to fix their terms. Fit coefficients:
 [`results/derived/stateless_fit.csv`](derived/stateless_fit.csv).
 
-**Table 9. SHRINCS stateless signing on five boards, expected seconds per message, by
-level and cores**
+**Table 9. SHRINCS stateless signing (earlier design) on five boards, expected seconds per
+message, by level and cores**
 
 | Board, cores | SHRINCS-B, level 1 | SHRINCS-B, level 2 | SHRINCS-B, level 3 | SHRINCS-L, level 1 | SHRINCS-L, level 2 | SHRINCS-L, level 3 |
 |---|---|---|---|---|---|---|
@@ -292,14 +288,14 @@ level and cores**
 | RP2350, two cores | n/a | 1,005 ± 5 | 598.3 ± 0.04 | n/a | 583.0 ± 0.02 | 442.4 ± 0.005 |
 
 Level 3 on one core, as Jade's release signs, against Blockstream's published figures
-(seconds), which time each wallet's own firmware on the host over USB [22] [23] [24].
+(seconds), which time each wallet's own firmware on the host over USB [23] [24] [25].
 Blockstream's figures, transcribed:
 [`results/published/blockstream_2026-08-19.csv`](published/blockstream_2026-08-19.csv).
 
 **Table 10. Our boards at level 3 against Blockstream's wallets: hash-based signing and
 key generation, seconds**
 
-| Operation | Pi Zero | ESP32-P4 | ESP32-S3 | Jade Plus | Trezor Safe 3/5/7 [25] | Ledger Nano gen5/S+ | BitBox02 Nova |
+| Operation | Pi Zero | ESP32-P4 | ESP32-S3 | Jade Plus | Trezor Safe 3/5/7 [26] | Ledger Nano gen5/S+ | BitBox02 Nova |
 |---|---|---|---|---|---|---|---|
 | SLH-DSA-SHA2-128s sign | 5.030 | 6.198 | 7.337 | 52.85 | 65.31 | 120.12 | 100.1 |
 | SPHINCS+ 2^40 sign | 3.912 | 4.886 | 5.794 | 43.28 | 53.45 | 94.98 | 78.4 |
@@ -315,45 +311,45 @@ key generation, seconds**
 
 How long each device takes to sign, for four schemes: our boards, and every device in the
 other published reports we found. The sources used different code and timing methods, so
-the comparison is approximate [26].
+the comparison is approximate [27].
 
 **Table 11. Signing time on our boards (level 3, one core) and in other published reports:
 four schemes**
 
-| Device | Chip and clock [27] | SLH-DSA-SHA2-128s | SHRINCS-B stateful | ML-DSA-44 | FN-DSA-512 | Source |
+| Device | Chip and clock [28] | SLH-DSA-SHA2-128s | SPHINCS+ 2^40 | ML-DSA-44 | FN-DSA-512 | Source |
 |---|---|---|---|---|---|---|
-| Pi Zero 2 W | Cortex-A53, 1 GHz | 2.5 s | 0.66 s | 5.1 ms | 23 ms | this report |
-| Pi Zero | ARM1176, 1 GHz | 5.0 s | 1.3 s | 9.2 ms | 44 ms | this report |
-| ESP32-P4 | ESP32-P4, 400 MHz | 6.2 s | 2.1 s | 23 ms | 100 ms | this report |
-| ESP32-S3 | ESP32-S3, 240 MHz | 7.3 s | 2.6 s | 40 ms | 190 ms | this report |
-| RP2350 | Cortex-M33, 150 MHz | 9.7 s | 3.6 s | 54 ms | 320 ms | this report |
+| Pi Zero 2 W | Cortex-A53, 1 GHz | 2.5 s | 1.9 s | 5.1 ms | 23 ms | this report |
+| Pi Zero | ARM1176, 1 GHz | 5.0 s | 3.9 s | 9.2 ms | 44 ms | this report |
+| ESP32-P4 | ESP32-P4, 400 MHz | 6.2 s | 4.9 s | 23 ms | 100 ms | this report |
+| ESP32-S3 | ESP32-S3, 240 MHz | 7.3 s | 5.8 s | 40 ms | 190 ms | this report |
+| RP2350 | Cortex-M33, 150 MHz | 9.7 s | 7.7 s | 54 ms | 320 ms | this report |
 | Trezor Safe 7, developer experiment with the hash unit [2] | STM32U5G9 (Cortex-M33), 160 MHz | 20 s | – | – | – | [trezor-firmware issue #6835](https://github.com/trezor/trezor-firmware/issues/6835) and [branch notes](https://github.com/trezor/trezor-firmware/blob/cepetr/slh-dsa-hw-sha/branch-notes.md) |
-| Trezor Model T [28] | STM32F427 (Cortex-M4F), 180 MHz | 75 s | – | 78 ms | 510 ms | [trezor-firmware PR #4901](https://github.com/trezor/trezor-firmware/pull/4901) and [gist](https://gist.github.com/onvej-sl/3851bdae7ae5aa1f2624ca769737ea2e), 2025-04 |
-| Jade Plus | ESP32-S3, 240 MHz | 53 s | 22 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
-| Trezor Safe 3/5/7 | STM32F427, 180 MHz, or STM32U585 or STM32U5G9, 160 MHz | 65 s | 26 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
-| BitBox02 Nova | ATSAMD51J20A (Cortex-M4F), 120 MHz | 100 s | 31 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
-| Ledger Nano gen5/S+ | ST33K1M5 secure element, 70 or 75 MHz | 120 s | 42 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
-| Not named in the post [29] | not stated | – | – | 1,100 ms | 840 ms | [Ledger Donjon, 2026-02-26](https://www.ledger.com/blog-quantum-computing-threat-to-blockchain) |
-| NUCLEO-L4R5ZI | Cortex-M4, 20 MHz | 380 s | – | 370 ms | – | [pqm4](https://github.com/mupq/pqm4/tree/master/results/speed), derived [30] |
+| Jade Plus | ESP32-S3, 240 MHz | 53 s | 43 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
+| Trezor Model T [29] | STM32F427 (Cortex-M4F), 180 MHz | 75 s | – | 78 ms | 510 ms | [trezor-firmware PR #4901](https://github.com/trezor/trezor-firmware/pull/4901) and [gist](https://gist.github.com/onvej-sl/3851bdae7ae5aa1f2624ca769737ea2e), 2025-04 |
+| Trezor Safe 3/5/7 | STM32F427, 180 MHz, or STM32U585 or STM32U5G9, 160 MHz | 65 s | 53 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
+| BitBox02 Nova | ATSAMD51J20A (Cortex-M4F), 120 MHz | 100 s | 78 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
+| Ledger Nano gen5/S+ | ST33K1M5 secure element, 70 or 75 MHz | 120 s | 95 s | – | – | [Blockstream, 2026-08-19](https://blog.blockstream.com/hardware-wallets-post-quantum-signatures/) |
+| Not named in the post [30] | not stated | – | – | 1,100 ms | 840 ms | [Ledger Donjon, 2026-02-26](https://www.ledger.com/blog-quantum-computing-threat-to-blockchain) |
+| NUCLEO-L4R5ZI | Cortex-M4, 20 MHz | 380 s | – | 370 ms | – | [pqm4](https://github.com/mupq/pqm4/tree/master/results/speed), derived [31] |
 
 - **Our boards:** level 3 (each board's tuned build, [section
   2.1](#21-processors-and-levels)), one core, timed on the device.
 - **Other reports:** figures as published; their code, run counts, and timing methods
   differ.
-- **Hash hardware:** on the Jade Plus, Blockstream's SLH-DSA path hashes in portable C,
-  and its SHRINCS and XMSS paths hash through mbedTLS and the ESP32-S3's SHA unit (Table
-  22); on the other three wallets the harness hashes in portable C. Of those wallets'
-  chips, only the Trezors' STM32U585 and STM32U5G9 (in the Safe 3 rev B, Safe 5, and Safe
-  7: a HASH unit that shipping firmware restricts to secure, privileged code) and the
-  BitBox02 Nova's SAMD51 (its ICM) have SHA-256 hardware; the STM32F427 and the ST33K have
-  none, and no device in any report has Keccak hardware
+- **Hash hardware:** on the Jade Plus, Blockstream's SLH-DSA-SHA2-128s and SPHINCS+ 2^40
+  code hashes in portable C, and its SHRINCS and XMSS code hashes through mbedTLS and the
+  ESP32-S3's SHA unit (Table 22); on the other three wallets the harness hashes in
+  portable C. Of those wallets' chips, only the Trezors' STM32U585 and STM32U5G9 (in the
+  Safe 3 rev B, Safe 5, and Safe 7: a HASH unit that shipping firmware restricts to
+  secure, privileged code) and the BitBox02 Nova's SAMD51 (its ICM) have SHA-256 hardware;
+  the STM32F427 and the ST33K have none, and no device in any report has Keccak hardware
   ([`docs/other-devices-hash-hardware.md`](../docs/other-devices-hash-hardware.md)).
 - **A dash:** the source did not measure that scheme.
 
 ### 3.2 Verification
 
 Verification by level on the Pi Zero 2 W and Pi Zero, one core (milliseconds): means over
-host-made signatures, n=100 [31]. Lattice verification is in Tables 13a and 13b.
+host-made signatures, n=100 [32]. Lattice verification is in Tables 13a and 13b.
 
 **Table 12a. Pi Zero 2 W (Cortex-A53, 1 GHz) and Pi Zero (ARM1176, 1 GHz): hash-based
 verification, mean ms, by level, one core**
@@ -368,7 +364,7 @@ verification, mean ms, by level, one core**
 | SHRINCS-L, stateful | 0.166 | 0.131 | 0.092 | 0.276 | 0.263 | 0.199 |
 | SHRINCS-L, stateless | 0.811 | 0.606 | 0.462 | 1.303 | 1.194 | 0.96 |
 
-Verification by level on the microcontrollers, one core [32] (milliseconds): means over
+Verification by level on the microcontrollers, one core [33] (milliseconds): means over
 host-made signatures, n=10.
 
 **Table 12b. ESP32-P4 (400 MHz), ESP32-S3 (240 MHz), and RP2350 (150 MHz): hash-based
@@ -389,7 +385,7 @@ verification, mean ms, by level, one core**
 Lattice key generation, signing, and verification at levels 1 and 3, one core
 (milliseconds): means over inputs 0 to 99 (n=100), and ML-DSA signing as the expected
 value per message ± its standard error (the fit's, not the spread between messages, which
-follows the attempt count), with the per-attempt time [33] [34] [5] [35].
+follows the attempt count), with the per-attempt time [34] [35] [6] [36].
 
 **Table 13a. Pi Zero 2 W (Cortex-A53, 1 GHz) and Pi Zero (ARM1176, 1 GHz): lattice keygen,
 signing, and verification, ms, levels 1 and 3, one core**
@@ -463,7 +459,7 @@ signing, and verification, ms, levels 1 and 3, one core**
 | FN-DSA-1024 sign | 226.4 | 226.7 | 412.3 | 411.3 | 678.3 | 685.2 |
 | FN-DSA-1024 verify | 2.921 | 2.922 | 5.867 | 5.477 | 9.10 | 8.95 |
 
-FN-DSA key generation over seeds 0 to 99, one core (milliseconds): n=100 [36].
+FN-DSA key generation over seeds 0 to 99, one core (milliseconds): n=100 [37].
 
 **Table 14. FN-DSA key generation on five boards: milliseconds over seeds 0 to 99, levels
 1 and 3, one core**
@@ -503,7 +499,7 @@ RAM over default, ratios of stack and time, level 3, one core**
 | ML-DSA-65 | 0.249 | 2.25 | 0.254 | 2.23 | 0.249 | 2.20 |
 | ML-DSA-87 | 0.203 | 2.19 | 0.206 | 2.17 | 0.202 | 2.17 |
 
-Lattice level-1 time divided by level-3 time, one core, from Tables 13a and 13b [37].
+Lattice level-1 time divided by level-3 time, one core, from Tables 13a and 13b [38].
 
 **Table 16. Lattice operations on five boards: level-1 time divided by level-3 time, one
 core**
@@ -537,7 +533,7 @@ core**
 
 ### 3.4 Peak stack and heap
 
-Peak stack and heap per operation at level 3, one core unless stated (bytes) [38] [39].
+Peak stack and heap per operation at level 3, one core unless stated (bytes) [39] [40].
 The Pi boards' memory builds ran on one core only, so their tables have no two-core rows.
 
 **Table 17a. Pi Zero 2 W (Cortex-A53, 1 GHz) and Pi Zero (ARM1176, 1 GHz): peak stack and
@@ -805,7 +801,7 @@ page); the differences measure how well the runs repeat and correct nothing. Tab
 21b, and 22 come from the first round only.
 
 Pi Zero: second-round mean against first-round mean for the same operation, level, and
-runs (percent change) [40] [41] [42].
+runs (percent change) [41] [42] [43].
 
 **Table 20a. Pi Zero (ARM1176, 1 GHz): second round against first round, percent change of
 the mean, by level**
@@ -846,7 +842,7 @@ layout, and a 100-run job is one process, so its standard deviation leaves this 
 out; most of the level-2 differences above are attributed to it. The cause inside the
 layout (cache or TLB conflicts, for example) was not investigated.
 
-ESP32-P4, as Table 20a, per level and core count (percent change) [43].
+ESP32-P4, as Table 20a, per level and core count (percent change) [44].
 
 **Table 20b. ESP32-P4 (400 MHz): second round against first round, percent change of the
 mean, by level and cores**
@@ -914,7 +910,7 @@ Every compared output equals the first round's.
 
 Cost of safeguards, Pi Zero level 3, first round: means of n=100 runs (seconds), and in
 the last two columns the percent change from adding the stack protector (static builds)
-and from moving to PIE with dynamic linking [44].
+and from moving to PIE with dynamic linking [45].
 
 **Table 21a. Pi Zero (ARM1176, 1 GHz): cost of safeguards at level 3, mean seconds and
 percent change, first round**
@@ -933,7 +929,7 @@ percent change, first round**
 | XMSS 2^10 keygen | 3.977 | 4.373 | 4.140 | +10.0% | -5.3% |
 
 Cost of the ESP32 compiler stack protector (`-fstack-protector-strong`) at level 3, first
-round (percent change against ESP-IDF's defaults) [45] [46].
+round (percent change against ESP-IDF's defaults) [46] [47].
 
 **Table 21b. ESP32-P4 and ESP32-S3: cost of the compiler stack protector at level 3,
 percent change, first round**
@@ -948,7 +944,7 @@ percent change, first round**
 
 Jade firmware calibration, first round: Blockstream's unmodified Jade firmware on our
 ESP32-S3 board, timed on the host over USB as Blockstream timed it, against Blockstream's
-published Jade Plus figures (seconds) [24].
+published Jade Plus figures (seconds) [25].
 
 **Table 22. Jade firmware on our ESP32-S3 board (240 MHz) against Blockstream's Jade Plus
 figures, seconds**
@@ -967,25 +963,26 @@ figures, seconds**
 ## 4. Footnotes
 
 - [1] Relative to the Jade Plus: each device's factor is the geometric mean of its two
-  ratios, its SLH-DSA-SHA2-128s and its SHRINCS-B stateful signing time, each divided by
-  the fastest device's time for that scheme. The table compares that factor with the Jade
+  ratios, its SLH-DSA-SHA2-128s and its SPHINCS+ 2^40 signing time, each divided by the
+  fastest device's time for that scheme. The table compares that factor with the Jade
   Plus's, from Blockstream's published figures: +Nx means the device signs N times as fast
   as the Jade Plus (the Jade Plus's factor divided by the device's), −Nx that it takes N
   times as long (the device's factor divided by the Jade Plus's), to two significant
   figures. The Trezor Safe 7 test build has one scheme: its row compares that scheme's
   time with the Jade Plus's for the same scheme and is left out of what follows. Both
   schemes put the devices in the same order, and a device's two ratios differ by up to a
-  factor of 1.6 (the Jade Plus: 21 for SLH-DSA-SHA2-128s against 33 for SHRINCS-B). Our
-  boards: level 3, one core, the means of the per-board tables in section 3.1; chips and
-  clocks in section 2.1. Blockstream's wallets: its published averages of 100 executions,
-  timed on the host over each wallet's USB interface, which includes data transfer and any
-  display work during the operation (`results/published/blockstream_2026-08-19.csv`).
-  Their chips and clocks come from vendor and certification documents, not from the post:
-  Jade Plus, ESP32-S3, 240 MHz; Trezor Safe 3/5/7, STM32F427, 180 MHz, or STM32U585 or
-  STM32U5G9, 160 MHz; Ledger Nano gen5/S+, ST33K1M5 secure element, 70 or 75 MHz; BitBox02
-  Nova, ATSAMD51J20A (Cortex-M4F), 120 MHz (Jade Plus: Jade's build configuration;
-  Blockstream's Trezor signing figures are labeled Trezor Safe 3/5/7, and it does not say
-  which model or hardware revision it timed; `docs/other-devices-hash-hardware.md`).
+  factor of 1.1 (the Jade Plus: 21 for SLH-DSA-SHA2-128s against 22 for SPHINCS+ 2^40).
+  Our boards: level 3, one core, the means of the per-board tables in section 3.1; chips
+  and clocks in section 2.1. Blockstream's wallets: its published averages of 100
+  executions, timed on the host over each wallet's USB interface, which includes data
+  transfer and any display work during the operation
+  (`results/published/blockstream_2026-08-19.csv`). Their chips and clocks come from
+  vendor and certification documents, not from the post: Jade Plus, ESP32-S3, 240 MHz;
+  Trezor Safe 3/5/7, STM32F427, 180 MHz, or STM32U585 or STM32U5G9, 160 MHz; Ledger Nano
+  gen5/S+, ST33K1M5 secure element, 70 or 75 MHz; BitBox02 Nova, ATSAMD51J20A
+  (Cortex-M4F), 120 MHz (Jade Plus: Jade's build configuration; Blockstream's Trezor
+  signing figures are labeled Trezor Safe 3/5/7, and it does not say which model or
+  hardware revision it timed; `docs/other-devices-hash-hardware.md`).
 - [2] A Trezor developer wrote in trezor/trezor-firmware issue #6835 (2026-04-29) that
   branch `cepetr/slh-dsa-hw-sha` reduced SLH-DSA-128 signing time to 20 seconds; the
   branch notes record "Signed in 19.657 s" for the vendored SPHINCS+ SHA2-128s reference
@@ -996,20 +993,30 @@ figures, seconds**
   model, and covers one scheme; on production Safe 7 units the HASH unit is not reachable
   by applications (`results/published/trezor-hw-sha_2025-12.csv`,
   `docs/other-devices-hash-hardware.md`).
-- [3] SeedSigner OS currently runs the Pi Zero 2 W at 600 MHz
+- [3] The current SHRINCS draft
+  ([SHRINCS/shrincs-bip](https://github.com/SHRINCS/shrincs-bip)) signs on its stateless
+  path with SLH-DSA at h=45, d=5, h'=9, k=10, a=13, and w=16, the parameters of the set
+  that Blockstream's post calls SPHINCS+ 2^40. The SPHINCS+ 2^40 rows therefore time that
+  path, apart from a few hash calls in message hashing (not checked against the draft's
+  test vectors). SHRINCS-B and SHRINCS-L time Blockstream's code in the Jade fork: the
+  earlier design behind Blockstream's published figures, not the current draft. Its
+  stateful path uses other WOTS+C parameters (SHRINCS-B: 16 chains with w=256; SHRINCS-L:
+  64 chains with w=4; the current draft has one parameter set, 32 chains with w=16), and
+  its stateless path uses PORS+FP instead of SLH-DSA.
+- [4] SeedSigner OS currently runs the Pi Zero 2 W at 600 MHz
   ([SeedSigner/seedsigner-os#129](https://github.com/SeedSigner/seedsigner-os/issues/129)).
-- [4] SHRINCS stateful signatures grow with the state counter: the q-th signature from a
+- [5] SHRINCS stateful signatures grow with the state counter: the q-th signature from a
   key carries min(q, HSF) authentication nodes of 16 bytes, so it takes 308 + 16q bytes
   under SHRINCS-B (HSF = 141, at most 2,564 bytes) and 1,076 + 16q bytes under SHRINCS-L
   (HSF = 189, at most 4,100 bytes). Sources:
   `third_party/jade-hbs/main/shrincs/constants.h` and `uxmss_auth_path()` in `uxmss.c`.
   The benchmark signs with q = 1 (`harness/common/op_shrincs.c`), the size shown.
-- [5] FN-DSA is not standardized: no FIPS 206 draft was found as of 2026-11-20, so
+- [6] FN-DSA is not standardized: no FIPS 206 draft was found as of 2026-11-20, so
   c-fn-dsa implements its author's reading of the expected standard, its key and signature
   formats may change, and its known-answer vectors are its own. Every FN-DSA figure, the
   Pi Zero 2 W's and Pi Zero's included, uses c-fn-dsa's integer emulation of floating
   point.
-- [6] The board names in this report stand for these boards. Pi Zero: a Pi Zero W, with
+- [7] The board names in this report stand for these boards. Pi Zero: a Pi Zero W, with
   the Pi Zero's BCM2835 at 1 GHz and 512 MB of RAM; the W adds a wireless chip, for which
   SeedSigner OS's Pi Zero image builds no driver (its kernel configuration,
   `opt/pi0/board/kernel.config` in seedsigner-os, leaves out Wi-Fi and Bluetooth support).
@@ -1017,30 +1024,30 @@ figures, seconds**
   Zero 2 W, which SeedSigner's releases support, though it is less common than the Pi
   Zero. ESP32-P4: a Waveshare ESP32-P4 WiFi6 Touch LCD 4.3. ESP32-S3: a Waveshare ESP32-S3
   Touch LCD 2. RP2350: a Waveshare RP2350 Touch LCD 2.
-- [7] Both lattice implementations hash with SHAKE, which neither the ESP32 SHA units nor
+- [8] Both lattice implementations hash with SHAKE, which neither the ESP32 SHA units nor
   the RP2350's SHA-256 accelerator computes, and no OpenSSL-backed SHAKE path was built
   for the Pi Zero 2 W or Pi Zero, so a level-2 build would run the level-1 lattice code;
   neither implementation has a two-core path.
-- [8] On the Pi Zero 2 W, Blockstream's dual-core code paths run over a stand-in for the
+- [9] On the Pi Zero 2 W, Blockstream's dual-core code paths run over a stand-in for the
   FreeRTOS task calls they use, built on POSIX threads: one persistent worker thread runs
   the second core's tasks, and Linux places the threads on the board's four cores
   (`harness/linux/shim_dualcore/`).
-- [9] On the RP2350, FreeRTOS runs on both cores (its SMP kernel), so Blockstream's
+- [10] On the RP2350, FreeRTOS runs on both cores (its SMP kernel), so Blockstream's
   dual-core code paths run with the kernel's own task calls; one header maps ESP-IDF's
   `xTaskCreatePinnedToCore` onto the kernel. The tick is 100 Hz, as in ESP-IDF, because
   Blockstream's grinding loops wait one tick at a time
   (`docs/knowledge/rp2350-pico-sdk-freertos-porting-traps.md`).
-- [10] Pi Zero 2 W and Pi Zero: their SDK compilers' stack protector, PIE, and full RELRO.
+- [11] Pi Zero 2 W and Pi Zero: their SDK compilers' stack protector, PIE, and full RELRO.
   ESP32 boards: ESP-IDF's FreeRTOS stack canary, the ESP32-P4 hardware stack guard, and
   ESP32-S3 memory protection. RP2350: FreeRTOS's stack overflow check, the per-task stack
   limit register, and a hardware watchdog. Details: [Safeguard
   settings](#safeguard-settings) on the methods page.
-- [11] The FreeRTOS end-of-stack watchpoint (`CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK`) is
+- [12] The FreeRTOS end-of-stack watchpoint (`CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK`) is
   off in every build, as it is by ESP-IDF default and in Jade's configuration. In separate
   runs it slowed signing on the ESP32-P4 by 12 to 31% at every level, plain C included,
   and changed no time on the ESP32-S3 by more than 0.2%
   (`docs/knowledge/esp32-p4-stack-watchpoint-cost.md`).
-- [12] Signing uses Blockstream's fixed keys from Jade's signing handlers, as Jade's
+- [13] Signing uses Blockstream's fixed keys from Jade's signing handlers, as Jade's
   firmware does. The fixed SHRINCS key is consistent under SHRINCS-L and inconsistent
   under SHRINCS-B, and the fixed XMSS key is inconsistent (its stored root differs from
   the one its seeds produce), so SHRINCS-B and XMSS signatures made with them cannot be
@@ -1048,13 +1055,6 @@ figures, seconds**
   self-tests use keys derived consistently from seeds: recomputing each fixed key's public
   parts from its seeds (`scripts/xmss_fixed_key_check.c`) and verifying with shrincs-cpp
   (`scripts/shrincs_cpp_verify.py`) showed the mismatches above.
-- [13] SHRINCS-L stateful signing grinds a WOTS+C counter until the digit sum reaches the
-  target sum swn=140, a message-dependent number of attempts, so its figure is the
-  expected time per message from a least-squares fit of time against attempts (counters
-  from each run's grind column), evaluated at the exact expectation of 6,218,398 attempts
-  (`docs/knowledge/shrincs-l-grinding-time-method.md`, `scripts/grind_fit_r2.py`). The
-  methods page gives the attempt counts of messages 0 to 9 ([Expected
-  values](#expected-values)).
 - [14] Signing is deterministic: ML-DSA with rnd set to 32 zero bytes (FIPS 204 permits
   this; hedged signing is its default) and FN-DSA with a fixed 40-byte signing seed, so
   outputs match across boards byte for byte. Hedged signing adds one 32-byte random draw
@@ -1069,16 +1069,23 @@ figures, seconds**
   to 0.01 or 0.1 points. Tables 1 and 2 round the detail-table figures further (half up),
   and `scripts/report/fill.py` checks every such figure against the detail table, and C1's
   figures from other reports against their transcriptions in `results/published/`.
-- [16] In every Pi Zero 2 W and Pi Zero build, the one SHA-512 call per key generation
+- [16] SHRINCS-L stateful signing grinds a WOTS+C counter until the digit sum reaches the
+  target sum swn=140, a message-dependent number of attempts, so its figure is the
+  expected time per message from a least-squares fit of time against attempts (counters
+  from each run's grind column), evaluated at the exact expectation of 6,218,398 attempts
+  (`docs/knowledge/shrincs-l-grinding-time-method.md`, `scripts/grind_fit_r2.py`). The
+  methods page gives the attempt counts of messages 0 to 9 ([Expected
+  values](#expected-values)).
+- [17] In every Pi Zero 2 W and Pi Zero build, the one SHA-512 call per key generation
   (seed derivation, inside the timed section of every hash-based key generation) goes
   through OpenSSL 3.4.1 (`harness/linux/shim/sha512_openssl.c` at levels 1 and 3, the
   OpenSSL-backed shim at level 2), so the levels differ in SHA-256 only. Its cost was not
   measured separately.
-- [17] The Pi Zero's level-2 build runs at a speed that depends on the process: XMSS 2^10
+- [18] The Pi Zero's level-2 build runs at a speed that depends on the process: XMSS 2^10
   key generation took 5.417 to 5.615 s of CPU time in 6 processes of one binary (3.7%
   apart), and a 100-run job is one process, so its standard deviation leaves this
   component out (Table 20a and the text after it).
-- [18] The RP2350's SHA-256 accelerator cannot load a saved state: writes to its result
+- [19] The RP2350's SHA-256 accelerator cannot load a saved state: writes to its result
   registers are ignored, and the next block continues from the accelerator's own state
   (`docs/knowledge/rp2350-sha256-accelerator-no-resume.md`). At levels 2 and 3 the code
   rebuilds a precomputed state, such as SLH-DSA's state after the PK.seed block, by
@@ -1086,14 +1093,14 @@ figures, seconds**
   software. In SLH-DSA-SHA2-128s and SHRINCS-B signing nearly every compression is a
   replay, and in the signing operations counted none ran in software
   (`docs/knowledge/rp2350-sha256-accelerator-no-resume.md`).
-- [19] On the RP2350 at level 2, two cores took longer than one for SLH-DSA-SHA2-128s,
+- [20] On the RP2350 at level 2, two cores took longer than one for SLH-DSA-SHA2-128s,
   SPHINCS+ 2^40, and SHRINCS-B signing and key generation (one-core time over two-core
   time 0.61 to 0.75, Table 19b). A check build of the same configuration with the
   hash-based and SHA-256 code in SRAM signed messages 0 and 1 with SLH-DSA-SHA2-128s on
   two cores in a mean of 11.14 s, against 20.75 s for the same messages in the level-2
   build, whose code runs from flash through a 16 KB cache both cores share. The tables
   report the level-2 build as measured, with the SDK's default code placement.
-- [20] The fit is time = fixed + k_pors x (PORS+FP attempts) + k_wots x (WOTS+C attempts,
+- [21] The fit is time = fixed + k_pors x (PORS+FP attempts) + k_wots x (WOTS+C attempts,
   both layers) + k_tree x (PORS+FP tree hash calls), with a key derived consistently from
   a seed, evaluated at 1,659,626 PORS+FP attempts, 748.0 (SHRINCS-B, swn=2040) or
   6,218,398 (SHRINCS-L, swn=140) WOTS+C attempts per layer, and 18,235,751 tree hash
@@ -1104,29 +1111,29 @@ figures, seconds**
   time at the expected counts, not to divide the time between the terms
   (`scripts/grind_fit_r2.py`; the tree work per message comes from the host build of
   `scripts/pors_work.c`).
-- [21] n=10 on the Pi Zero 2 W and Pi Zero as well (n=100 for their other operations),
+- [22] n=10 on the Pi Zero 2 W and Pi Zero as well (n=100 for their other operations),
   because each run takes minutes. On the RP2350, where one run takes 3 to 39 minutes, n=10
   holds at level 3 on one core only; the other counts are n=6 at level 3 on two cores and
   at level 2, n=5 at level 1 on one core, and n=3 at level 1 on two cores, too few runs
   for the two-core fit, so those two cells read n/a
   (`scripts/r4_plans/rp2350-stateless.plan`).
-- [22] Among the signing results, SHRINCS-L at swn=96 appears only in Table 10, to match
+- [23] Among the signing results, SHRINCS-L at swn=96 appears only in Table 10, to match
   Blockstream's table, and in the comparisons with the first round (Tables 20a to 20c): it
   is a mean over the same inputs, and 140 is the scheme's specified target sum.
-- [23] Blockstream's key generation table gives one figure per wallet for
+- [24] Blockstream's key generation table gives one figure per wallet for
   SLH-DSA-SHA2-128s and SPHINCS+ 2^40 together (one table cell spans both rows), so both
   rows carry the same published figures.
-- [24] Jade's SHRINCS port leaves its mbedTLS SHA-256 contexts unstarted, which on ESP
+- [25] Jade's SHRINCS port leaves its mbedTLS SHA-256 contexts unstarted, which on ESP
   hardware hashes with SHA-1
   (`docs/knowledge/esp-idf-mbedtls-unstarted-sha256-context.md`). The benchmark builds
   start every context as SHA-256, so Jade's firmware SHRINCS rows in Table 22 time
   different hash computations from ours; the material examined does not state which build
   produced Blockstream's published figures (`docs/knowledge/jade-hbs-benchmark-notes.md`).
-- [25] Blockstream labels its Trezor signing figures Trezor Safe 3/5/7 and its key
+- [26] Blockstream labels its Trezor signing figures Trezor Safe 3/5/7 and its key
   generation figures Trezor Safe 3, and does not say which model or hardware revision ran
   each. The Safe 3 has an STM32F427 (revision A) or an STM32U585 (revision B), the Safe 5
   an STM32U585, and the Safe 7 an STM32U5G9 (`docs/other-devices-hash-hardware.md`).
-- [26] Table 11 in detail. Figures are rounded to two significant figures. Our boards'
+- [27] Table 11 in detail. Figures are rounded to two significant figures. Our boards'
   figures are level 3 on one core, as in Table 2, with ML-DSA as the expected value per
   message. Other reports' figures are as published, converted to these units, from the
   transcriptions in `results/published/`; chips and clocks as in the table's Chip and
@@ -1143,37 +1150,37 @@ figures, seconds**
   Ledger Donjon used a plain C Falcon and a low-RAM ML-DSA; pqm4's rows are its portable C
   implementations; the Trezor Model T ran PQClean's reference code, with PQClean's own
   SHA-2 and SHA-3. Hash hardware: at level 3 our ESP32 boards and the RP2350 hash with the
-  chip's SHA-256 hardware, while Jade's SLH-DSA path on the Jade Plus hashes in portable
-  C; Table 22 times Jade's own firmware on our ESP32-S3 board ([section
-  3.6](#36-reproducibility-cost-of-safeguards-and-jade-firmware-calibration)).
-- [27] Our boards' chips and clocks are our own records (section 2.1). The other devices'
+  chip's SHA-256 hardware, while Jade's SLH-DSA-SHA2-128s and SPHINCS+ 2^40 code on the
+  Jade Plus hashes in portable C; Table 22 times Jade's own firmware on our ESP32-S3 board
+  ([section 3.6](#36-reproducibility-cost-of-safeguards-and-jade-firmware-calibration)).
+- [28] Our boards' chips and clocks are our own records (section 2.1). The other devices'
   chips and clocks come from vendor and certification documents, and the Jade Plus's from
   Jade's build configuration, not from the reports themselves
   (`docs/other-devices-hash-hardware.md`, `docs/knowledge/jade-hbs-benchmark-notes.md`).
   Blockstream does not say which Trezor model or hardware revision it timed.
-- [28] The gist holds the results table of trezor/trezor-firmware pull request #4901
+- [29] The gist holds the results table of trezor/trezor-firmware pull request #4901
   (closed without merging), which states: "All the benchmarks were run on a Trezor T."
   Neither names the clock; each figure is one value with the RAM used, with no run count
   (`results/published/onvej-sl-gist_2025-04.csv`).
-- [29] Ledger Donjon's post gives memory figures measured on the ST33K secure element and
+- [30] Ledger Donjon's post gives memory figures measured on the ST33K secure element and
   a separate table of execution times, labeled averages, without naming the device that
   ran them. Its FN-DSA-512 figure is for Falcon-512 ("a non optimized, plain C version"),
   and its ML-DSA-44 figure is for ZKNox's low-RAM implementation
   (`results/published/ledger-donjon_2026-02-26.csv`).
-- [30] pqm4 publishes cycle counts; the times here are its average divided by the clock
+- [31] pqm4 publishes cycle counts; the times here are its average divided by the clock
   its results pages state (20 MHz on the NUCLEO-L4R5ZI, a Cortex-M4 board).
   SLH-DSA-SHA2-128s uses its `ref` implementation and ML-DSA-44 its portable `clean` one,
   the closest to ours; its Cortex-M4 assembly (`m4f`) signs ML-DSA-44 in about half the
   cycles. Its FN-DSA figures are left out: they appear only in `benchmarks.md`, whose
   clock the README gives as 24 MHz (`results/published/pqm4_2026-11-24.csv`).
-- [31] The Pi Zero 2 W and Pi Zero verify the ten embedded signatures in turn (run x
+- [32] The Pi Zero 2 W and Pi Zero verify the ten embedded signatures in turn (run x
   verifies message x mod 10), so their n=100 is ten passes over the same ten signatures;
   the ESP32 boards and the RP2350 verify each once.
-- [32] The ESP32 two-core builds run the same verification code. In the second round, over
+- [33] The ESP32 two-core builds run the same verification code. In the second round, over
   the 32 verification operations of 3 ms or more measured in both, the two-core mean
   differs from the one-core mean by at most 0.8% (XMSS 2^10, ESP32-P4, level 3). The third
   round reran the one-core builds only, so Table 12b gives one core.
-- [33] ML-DSA signing repeats a rejection-sampling loop a message-dependent number of
+- [34] ML-DSA signing repeats a rejection-sampling loop a message-dependent number of
   times. The expected values use mldsa-native's key-averaged expectations (4.361, 5.138,
   and 3.906 attempts for ML-DSA-44, -65, and -87) rather than the benchmark key's own
   mean, because a reader's key is not the benchmark key
@@ -1185,22 +1192,22 @@ figures, seconds**
   5.090, and 3.883) in place of those, every expected value in Tables 13a and 13b would be
   0.3 to 0.9% lower. Fit coefficients, standard errors, residuals, and plain means:
   [`results/derived/mldsa_fit.csv`](derived/mldsa_fit.csv).
-- [34] FN-DSA signing time has a coefficient of variation of at most 2.92% over the
+- [35] FN-DSA signing time has a coefficient of variation of at most 2.92% over the
   messages of each of the 20 jobs Tables 13a and 13b use, so its mean needs no model.
-- [35] On the RP2350, c-fn-dsa's Cortex-M4 assembly, which runs on the Cortex-M33 through
+- [36] On the RP2350, c-fn-dsa's Cortex-M4 assembly, which runs on the Cortex-M33 through
   its DSP extension, signs with FN-DSA-512 and -1024 in 0.46 of the integer emulation's
   time, verifies in 0.68 to 0.70, and generates keys in 0.94 (level 3, one core, n=100),
   with outputs equal to the host reference byte for byte. The tables keep the integer
   emulation, which every board runs.
-- [36] FN-DSA key generation time depends on the seed, and c-fn-dsa exposes no attempt
+- [37] FN-DSA key generation time depends on the seed, and c-fn-dsa exposes no attempt
   counter, so the figure is a mean over seeds 0 to 99 on every board, without a scaling
   model. At level 3, the mean over seeds 0 to 9 alone is 5 to 14% below the 100-seed mean
   on every board measured, which is why the tables use 100 seeds.
-- [37] On the ESP32-S3, ML-DSA-65 signing (0.958) and ML-DSA-87 signing (0.975) run faster
+- [38] On the ESP32-S3, ML-DSA-65 signing (0.958) and ML-DSA-87 signing (0.975) run faster
   at level 1 than at level 3 (Table 16, level-1 over level-3 time). Level 3 keeps the
   lattice code in flash, so the levels differ in -O3 and the cache sizes; the cause was
   not investigated.
-- [38] On the ESP32 boards and the RP2350 each figure is the largest over the n timing
+- [39] On the ESP32 boards and the RP2350 each figure is the largest over the n timing
   runs of the per-run task's stack high-water mark and of the drop in free heap during the
   run (internal heap on the ESP32 boards, the FreeRTOS heap on the RP2350). On the Pi Zero
   2 W and Pi Zero the figures come from separate memory builds: each run in a new thread
@@ -1214,35 +1221,35 @@ figures, seconds**
   of keys and inputs and its verification of new signatures; the heap figures include the
   harness's buffers and, on two ESP32 cores, the helper tasks' stacks. Self-tests are
   omitted. Method: `docs/knowledge/peak-memory-measurement.md`.
-- [39] The Pi Zero 2 W's level-2 memory figures come from builds that link the board's
+- [40] The Pi Zero 2 W's level-2 memory figures come from builds that link the board's
   shared OpenSSL library, as on the Pi Zero. Level-2 memory builds that link it statically
   abort at process exit, because the heap counters then also wrap libcrypto's own
   allocation calls (`docs/knowledge/peak-memory-measurement.md`); the level-2 timing
   builds link it statically.
-- [40] The second-round builds compile the hash-based code with the first round's options
+- [41] The second-round builds compile the hash-based code with the first round's options
   and add the lattice code and the embedded verification vectors; on the ESP32 boards they
   also run one task per run and handle console commands. None of it runs inside a timed
   section.
-- [41] A self-test is Jade's own check for a scheme: it restores a key from its seed,
+- [42] A self-test is Jade's own check for a scheme: it restores a key from its seed,
   signs one message, and verifies the signature; only the signing is timed. The ESP32
   boards ran each self-test once in the first round and n=10 in the second, so the
   comparison uses run 0; the Pi Zero ran them n=3 in both rounds.
-- [42] Each SHRINCS self-test first restores a consistent key from its seed
+- [43] Each SHRINCS self-test first restores a consistent key from its seed
   (`shrincs_restore()`, untimed), which rebuilds the stateful tree and a whole hypertree
   layer; on the ESP32 boards this makes a SHRINCS-B self-test take minutes of wall time
   per run (`docs/knowledge/benchmark-timing-resolution-and-untimed-work.md`).
-- [43] On the ESP32-P4 with two cores, SHRINCS-B signing, key generation, and self-test at
+- [44] On the ESP32-P4 with two cores, SHRINCS-B signing, key generation, and self-test at
   levels 1 and 2 take 2.25 to 2.36% longer in the second round than in the first (Table
   20b), against at most 0.23% at level 3 and 0.55% on one core; the hot SHRINCS functions
   sit at different flash addresses in the two rounds' binaries, consistent with a
   flash-cache placement effect that was not tested further. Either round's figure
   describes a valid build.
-- [44] SHRINCS-L at swn=140 is an expected value. Where PIE with dynamic linking is faster
+- [45] SHRINCS-L at swn=140 is an expected value. Where PIE with dynamic linking is faster
   than the static build, the cause was not investigated.
-- [45] `CONFIG_COMPILER_STACK_CHECK_MODE_STRONG`, as in Jade's build configuration. Only
+- [46] `CONFIG_COMPILER_STACK_CHECK_MODE_STRONG`, as in Jade's build configuration. Only
   native ESP-IDF projects can use it: it breaks MicroPython's setjmp/longjmp exception
   handling.
-- [46] The most negative value in Table 21b, -3.7% (SHRINCS-L sign, swn=140, ESP32-P4, one
+- [47] The most negative value in Table 21b, -3.7% (SHRINCS-L sign, swn=140, ESP32-P4, one
   core), holds run by run: on each of the 10 messages the stack-protected build took 2.7
   to 3.9% less time. The cause was not investigated.
 
@@ -1327,8 +1334,8 @@ Every level runs Blockstream's scheme code (jade-hbs @ f5c90a5e), with the two b
 edits described under Implementations and inputs, and the same keys and inputs. Levels
 differ only in how SHA-256 is computed, build settings, and memory placement. On the Pi
 Zero 2 W, the ESP32 boards, and the RP2350, every level is also run with Blockstream's
-dual-core code paths ("two cores"), which Jade's release builds leave compiled out [8]
-[9]; XMSS has no dual-core path and runs on one core in both builds on the ESP32 boards
+dual-core code paths ("two cores"), which Jade's release builds leave compiled out [9]
+[10]; XMSS has no dual-core path and runs on one core in both builds on the ESP32 boards
 and the RP2350, and only in the one-core build on the Pi Zero 2 W.
 
 - **Level 1, portable C:** SHA-256 in plain C for every scheme. Pi Zero 2 W and Pi Zero:
@@ -1342,7 +1349,7 @@ and the RP2350, and only in the one-core build on the Pi Zero 2 W.
   system OpenSSL 3.4.1 through its public API. ESP32: the SHA unit through ESP-IDF's
   driver functions; with two cores, the second core computes in plain C while the first
   holds the SHA unit. RP2350: the SHA-256 accelerator through the SDK's `hardware_sha256`
-  driver functions [18], code run from flash, -O2; with two cores, the second core
+  driver functions [19], code run from flash, -O2; with two cores, the second core
   computes in plain C while the first holds the accelerator.
 - **Level 3, tuned:** Pi Zero 2 W: OpenSSL 3.4.1's NEON SHA-256 block function, called
   directly, with a big-endian single-block copy for SLH-DSA, a native-word-order SHA-256
@@ -1429,7 +1436,7 @@ rounds or come from the first.
   at every level, plus the builds for the cost of safeguards (Tables 21a and 21b) and
   Jade's own firmware on our ESP32-S3 board (Table 22).
 - **Second round:** the hash-based schemes again on the same three boards, with builds
-  that also carry the lattice schemes and embedded verification vectors [40]. These
+  that also carry the lattice schemes and embedded verification vectors [41]. These
   boards' hash-based signing, key generation, and memory figures come from it.
 - **Third round:** verification at every level and the lattice schemes at levels 1 and 3
   on the same three boards, with the second round's builds printing times to 1 µs instead
@@ -1454,9 +1461,9 @@ rounds or come from the first.
   estimate of the expected signing time. On the Pi Zero 2 W and Pi Zero the fit uses the
   swn=140 job alone; on the ESP32 boards and the RP2350 it pools the swn=96 and swn=140
   runs of one job set.
-- SHRINCS stateless signing: the method is in footnote [20] on the results page; per-fit
+- SHRINCS stateless signing: the method is in footnote [21] on the results page; per-fit
   coefficients are in [`results/derived/stateless_fit.csv`](derived/stateless_fit.csv).
-- ML-DSA signing: the method is in footnote [33] on the results page; per-fit coefficients
+- ML-DSA signing: the method is in footnote [34] on the results page; per-fit coefficients
   are in [`results/derived/mldsa_fit.csv`](derived/mldsa_fit.csv).
 
 ### Correctness and independent verification

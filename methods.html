@@ -140,8 +140,8 @@ handler)</li>
 edits described under Implementations and inputs, and the same keys and inputs. Levels
 differ only in how SHA-256 is computed, build settings, and memory placement. On the Pi
 Zero 2 W, the ESP32 boards, and the RP2350, every level is also run with Blockstream's
-dual-core code paths (&quot;two cores&quot;), which Jade's release builds leave compiled out <a class="fnref" href="index.html#fn-8">[8]</a>
-<a class="fnref" href="index.html#fn-9">[9]</a>; XMSS has no dual-core path and runs on one core in both builds on the ESP32 boards
+dual-core code paths (&quot;two cores&quot;), which Jade's release builds leave compiled out <a class="fnref" href="index.html#fn-9">[9]</a>
+<a class="fnref" href="index.html#fn-10">[10]</a>; XMSS has no dual-core path and runs on one core in both builds on the ESP32 boards
 and the RP2350, and only in the one-core build on the Pi Zero 2 W.</p>
 <ul>
 <li><strong>Level 1, portable C:</strong> SHA-256 in plain C for every scheme. Pi Zero 2 W and Pi Zero:
@@ -155,7 +155,7 @@ its NEON SHA-256 code at run time, as the CPU has no SHA-256 instructions. Pi Ze
 system OpenSSL 3.4.1 through its public API. ESP32: the SHA unit through ESP-IDF's
 driver functions; with two cores, the second core computes in plain C while the first
 holds the SHA unit. RP2350: the SHA-256 accelerator through the SDK's <code>hardware_sha256</code>
-driver functions <a class="fnref" href="index.html#fn-18">[18]</a>, code run from flash, -O2; with two cores, the second core
+driver functions <a class="fnref" href="index.html#fn-19">[19]</a>, code run from flash, -O2; with two cores, the second core
 computes in plain C while the first holds the accelerator.</li>
 <li><strong>Level 3, tuned:</strong> Pi Zero 2 W: OpenSSL 3.4.1's NEON SHA-256 block function, called
 directly, with a big-endian single-block copy for SLH-DSA, a native-word-order SHA-256
@@ -241,7 +241,7 @@ rounds or come from the first.</p>
 at every level, plus the builds for the cost of safeguards (Tables 21a and 21b) and
 Jade's own firmware on our ESP32-S3 board (Table 22).</li>
 <li><strong>Second round:</strong> the hash-based schemes again on the same three boards, with builds
-that also carry the lattice schemes and embedded verification vectors <a class="fnref" href="index.html#fn-40">[40]</a>. These
+that also carry the lattice schemes and embedded verification vectors <a class="fnref" href="index.html#fn-41">[41]</a>. These
 boards' hash-based signing, key generation, and memory figures come from it.</li>
 <li><strong>Third round:</strong> verification at every level and the lattice schemes at levels 1 and 3
 on the same three boards, with the second round's builds printing times to 1 µs instead
@@ -266,9 +266,9 @@ average against the expectation of 6,218,398, so a plain mean over them is not a
 estimate of the expected signing time. On the Pi Zero 2 W and Pi Zero the fit uses the
 swn=140 job alone; on the ESP32 boards and the RP2350 it pools the swn=96 and swn=140
 runs of one job set.</li>
-<li>SHRINCS stateless signing: the method is in footnote <a class="fnref" href="index.html#fn-20">[20]</a> on the results page; per-fit
+<li>SHRINCS stateless signing: the method is in footnote <a class="fnref" href="index.html#fn-21">[21]</a> on the results page; per-fit
 coefficients are in <a href="results/derived/stateless_fit.csv"><code>results/derived/stateless_fit.csv</code></a>.</li>
-<li>ML-DSA signing: the method is in footnote <a class="fnref" href="index.html#fn-33">[33]</a> on the results page; per-fit coefficients
+<li>ML-DSA signing: the method is in footnote <a class="fnref" href="index.html#fn-34">[34]</a> on the results page; per-fit coefficients
 are in <a href="results/derived/mldsa_fit.csv"><code>results/derived/mldsa_fit.csv</code></a>.</li>
 </ul>
 <h2 id="correctness-and-independent-verification"><a class="anchor" href="#correctness-and-independent-verification"><span class="num">7</span>Correctness and independent verification</a></h2>

@@ -1539,22 +1539,19 @@ def stateless_key(b, v):
 
 
 # K1 groups: (key, heading as shown, rows); a row is (label, detail row label or None for
-# SHRINCS stateless, variant, size key, expected, label footnotes).
+# SHRINCS stateless, variant, size key, expected, label footnotes). SHRINCS-B and
+# SHRINCS-L (the earlier SHRINCS design) are left out: they appear in the detail tables
+# only.
 K1_STATELESS = "Stateless: nothing to keep between signatures"
 K1_STATEFUL = "Stateful: the device must never lose or reuse its counter"
 K1_LATTICE = "Lattice (stateless)"
 K1_GROUPS = [
     (K1_STATELESS, K1_STATELESS, [
         ("SLH-DSA-SHA2-128s", "SLH-DSA-SHA2-128s", "B", ("slh_dsa_sign", "B"), False, ""),
-        ("SPHINCS+ 2^40", "SPHINCS+ 2^40", "B", ("sphincs40_sign", "B"), False, ""),
-        ("SHRINCS-B, stateless", None, "B", ("shrincs_sign_stateless", "B"), True, ""),
-        ("SHRINCS-L, stateless", None, "L", ("shrincs_sign_stateless", "L"), True, ""),
+        ("SPHINCS+ 2^40", "SPHINCS+ 2^40", "B", ("sphincs40_sign", "B"), False,
+         "{{fn:shrincs-draft}}"),
     ]),
     (K1_STATEFUL, K1_STATEFUL, [
-        ("SHRINCS-B", "SHRINCS-B, stateful", "B", ("shrincs_sign", "B"), False,
-         "{{fn:fixed-keys}}"),
-        ("SHRINCS-L, swn=140", "SHRINCS-L, stateful, swn=140 (expected)", "L",
-         ("shrincs_sign", "L"), True, "{{fn:grinding}}"),
         ("XMSS 2^10", "XMSS 2^10", "B", ("xmss_sign", "B"), False, "{{fn:fixed-keys}}"),
     ]),
     (K1_LATTICE, K1_LATTICE + "{{fn:deterministic}}",
@@ -1638,7 +1635,7 @@ CHIP_LEDGER = "ST33K1M5 secure element, 70 or 75 MHz"
 CHIP_BITBOX = "ATSAMD51J20A (Cortex-M4F), 120 MHz"
 # Columns: (header, unit, our detail-table row for that scheme's signing).
 C1_COLS = [("SLH-DSA-SHA2-128s", "s", "SLH-DSA-SHA2-128s"),
-           ("SHRINCS-B stateful", "s", "SHRINCS-B, stateful"),
+           ("SPHINCS+ 2^40", "s", "SPHINCS+ 2^40"),
            ("ML-DSA-44", "ms", "mldsa44"), ("FN-DSA-512", "ms", "fndsa512")]
 # Other reports' devices: label, chip and clock (as the source states them), source cell,
 # and per column a transcription lookup (file, match, column, factor to the column's unit,
@@ -1655,16 +1652,16 @@ C1_OTHERS = [
     ("Jade Plus", "{CHIP_JADE}",
      f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "jade_plus", "1", None)),
-           (1, (BS, dict(op="shrincs_b_sign"), "jade_plus", "1", None))))),
+           (1, (BS, dict(op="sphincs40_sign"), "jade_plus", "1", None))))),
     (TREZOR_SIGN, "{CHIP_TREZOR}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "trezor_safe_3", "1", None)),
-           (1, (BS, dict(op="shrincs_b_sign"), "trezor_safe_3", "1", None))))),
+           (1, (BS, dict(op="sphincs40_sign"), "trezor_safe_3", "1", None))))),
     ("Ledger Nano gen5/S+", "{CHIP_LEDGER}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "ledger_nano_gen5_splus", "1", None)),
-           (1, (BS, dict(op="shrincs_b_sign"), "ledger_nano_gen5_splus", "1", None))))),
+           (1, (BS, dict(op="sphincs40_sign"), "ledger_nano_gen5_splus", "1", None))))),
     ("BitBox02 Nova", "{CHIP_BITBOX}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "bitbox02_nova", "1", None)),
-           (1, (BS, dict(op="shrincs_b_sign"), "bitbox02_nova", "1", None))))),
+           (1, (BS, dict(op="sphincs40_sign"), "bitbox02_nova", "1", None))))),
     ("Trezor Model T{{fn:comp-gist}}", "STM32F427 (Cortex-M4F), 180 MHz",
      f"[trezor-firmware PR #4901](https://github.com/trezor/trezor-firmware/pull/4901) and [gist]({URL_GIST}), 2025-04",
      dict(((0, (GIST, dict(op="sign", scheme="SLH-DSA-SHA2-128s"), "time_ms", "0.001", None)),
@@ -1765,12 +1762,15 @@ def t_compare():
     return table(head, [[lab, chip] + cells + [src] for _, lab, chip, cells, src in rows])
 
 
-# C1: a rough ranking by one factor: each device's signing time for
-# SLH-DSA-SHA2-128s and for SHRINCS-B stateful signing, divided by the fastest device's
-# time for that scheme; the factor is the geometric mean of the two ratios. Devices: ours
-# (level 3, one core, the detail cells as displayed) and Blockstream's four wallets.
+# C1: a rough ranking by one factor: each device's signing time for SLH-DSA-SHA2-128s and
+# for SPHINCS+ 2^40 (the parameters of the current SHRINCS draft's stateless path),
+# divided by the fastest device's time for that scheme; the factor is the geometric mean
+# of the two ratios. Both schemes are in Blockstream's table and neither depends on the
+# earlier SHRINCS design. Devices: ours (level 3, one core, the detail cells as displayed)
+# and Blockstream's four wallets. (label, detail row, published-figure match; Table D18
+# labels its rows "<label> sign".)
 C1_SCHEMES = [("SLH-DSA-SHA2-128s", "SLH-DSA-SHA2-128s", dict(op="slh_dsa_sign")),
-              ("SHRINCS-B", "SHRINCS-B, stateful", dict(op="shrincs_b_sign"))]
+              ("SPHINCS+ 2^40", "SPHINCS+ 2^40", dict(op="sphincs40_sign"))]
 C1_WALLETS = [("Jade Plus", CHIP_JADE, "jade_plus"),
               (TREZOR_SIGN, CHIP_TREZOR, "trezor_safe_3"),
               ("Ledger Nano gen5/S+", CHIP_LEDGER, "ledger_nano_gen5_splus"),
@@ -1875,7 +1875,7 @@ def t_rank():
             "The schemes order the devices differently for " + table_list(
                 [f"{a} and {b}" for a, b in swaps]))
     fn = (f"Relative to the {C1_BASE}: each device's factor is the geometric mean of its "
-          f"two ratios, its {C1_SCHEMES[0][0]} and its {C1_SCHEMES[1][0]} stateful signing "
+          f"two ratios, its {C1_SCHEMES[0][0]} and its {C1_SCHEMES[1][0]} signing "
           f"time, each divided by the fastest device's time for that scheme. The table "
           f"compares that factor with the {C1_BASE}'s, from Blockstream's published figures: "
           f"+Nx means the device signs N times as fast as the {C1_BASE} (the {C1_BASE}'s "
@@ -1944,7 +1944,7 @@ def discussion(L2):
     limit = int(top) + 1
     REFS.append(dict(kind="bound", inputs=[cs(k) for k in mine], limit=str(limit),
                      text=f"under {limit} seconds"))
-    w_slh, w_shr = wal("slh_dsa_sign"), wal("shrincs_b_sign")
+    w_slh, w_shr = (wal(m["op"]) for _, _, m in C1_SCHEMES)
     speed = (
         f"Signing with {C1_SCHEMES[0][0]}, the standardized hash-based scheme that needs "
         f"nothing saved between signatures:\n\n"
@@ -1963,9 +1963,10 @@ def discussion(L2):
     s7v = c1_value(s7)
     # Low end: Jade's own firmware timed on our ESP32-S3 board (Table D18) against our
     # level-3 build; high end: Blockstream's published Jade Plus figures against it.
-    cal = [dict(kind="cell", key=["D18", lab, "Jade firmware, our ESP32-S3 board (s)"])
-           for lab in ("SLH-DSA-SHA2-128s sign", "SHRINCS-B sign")]
-    calv = [NF.dnum(L2.cal_value(op)) for op in ("slh_dsa_sign", "shrincs_b_sign")]
+    cal = [dict(kind="cell",
+                key=["D18", f"{lab} sign", "Jade firmware, our ESP32-S3 board (s)"])
+           for lab, _, _ in C1_SCHEMES]
+    calv = [NF.dnum(L2.cal_value(m["op"])) for _, _, m in C1_SCHEMES]
     lo = quote("gm-ratio", cal + [cs(s3_slh), cs(s3_shr)],
                calv + [cval(s3_slh), cval(s3_shr)], 1)
     hi = quote("gm-ratio", [jade, jade_shr, cs(s3_slh), cs(s3_shr)],
@@ -2235,7 +2236,8 @@ def tested_schemes():
     hb = "<br>".join((
         f"SLH-DSA-SHA2-128s: {n('slh_dsa_sign')}-byte signatures",
         f"SPHINCS+ 2^40: {n('sphincs40_sign')} bytes",
-        f"SHRINCS-B and SHRINCS-L, stateful: {n('shrincs_sign')} and "
+        f"SHRINCS-B and SHRINCS-L (an earlier SHRINCS design{{{{fn:shrincs-draft}}}}), "
+        f"stateful: {n('shrincs_sign')} and "
         f"{n('shrincs_sign', 'L')} bytes{{{{fn:shrincs-q}}}}",
         f"SHRINCS-B and SHRINCS-L, stateless: {n('shrincs_sign_stateless')} and "
         f"{n('shrincs_sign_stateless', 'L')} bytes",
