@@ -143,27 +143,40 @@ def summary_rows(r2, L2, fit):
             row["value_s"] = row["mean_s"]
         row["_src"].append(path)
 
-    for kind, board, level, op, v, swn, dc, rnd, path, rs, f in r2.SUMMARY_LOG:
+    def mem_update(row, rs, board, path):
+        st = [int(r["stack_peak_bytes"]) for r in rs if r.get("stack_peak_bytes")]
+        hp = [int(r["heap_peak_bytes"]) for r in rs if r.get("heap_peak_bytes")]
+        row.update(stack_peak_bytes=max(st) if st else "",
+                   heap_peak_bytes=max(hp) if hp else "",
+                   memory_source="memory-build" if board in ("pi", "pi2") else "timing-run",
+                   memory_n=len(rs))
+        if path not in row["_src"]:
+            row["_src"].append(path)
+
+    for kind, board, level, op, v, swn, dc, rnd, path, all_rs, f in r2.SUMMARY_LOG:
         device = r2.DEVICE[board]
         cores = dc + 1
-        swn = rs[0]["swn"] if op.startswith("shrincs") else ""
-        row, vv = row_for(f"r{rnd}", device, level, "default", op, v, swn, cores)
-        if kind == "time":
-            add_timing(row, rs, vv, cores, op, path)
-        elif kind == "fit":
-            add_timing(row, rs, vv, cores, op, path)
-            row.update(statistic="expected", value_s=fmt(f["expected"]),
-                       expected_s=fmt(f["expected"]), expected_se_s=fmt(f["se"]),
-                       fit_model=f["model"], fit_e=f["e"], fit_max_residual_s=fmt(f["resid"]))
-        elif kind == "mem":
-            st = [int(r["stack_peak_bytes"]) for r in rs if r.get("stack_peak_bytes")]
-            hp = [int(r["heap_peak_bytes"]) for r in rs if r.get("heap_peak_bytes")]
-            row.update(stack_peak_bytes=max(st) if st else "",
-                       heap_peak_bytes=max(hp) if hp else "",
-                       memory_source="memory-build" if board in ("pi", "pi2") else "timing-run",
-                       memory_n=len(rs))
-            if path not in row["_src"]:
-                row["_src"].append(path)
+        # One row per target sum: a SHRINCS-L stateful job set holds swn=96 and swn=140
+        # runs, and its fit pools both but gives the expected value at swn=140 only.
+        by_swn = collections.OrderedDict()
+        for r in all_rs:
+            by_swn.setdefault(r["swn"] if op.startswith("shrincs") else "", []).append(r)
+        target = (f["e"][4:] if kind == "fit" and isinstance(f["e"], str)
+                  and f["e"].startswith("swn=") else None)
+        for swn, rs in by_swn.items():
+            row, vv = row_for(f"r{rnd}", device, level, "default", op, v, swn, cores)
+            if kind == "time" or (kind == "fit" and target is not None and swn != target):
+                add_timing(row, rs, vv, cores, op, path)
+            elif kind == "fit":
+                add_timing(row, rs, vv, cores, op, path)
+                model = f["model"] + (" (fit over the swn=96 and swn=140 runs together)"
+                                      if len(by_swn) > 1 else "")
+                row.update(statistic="expected", value_s=fmt(f["expected"]),
+                           expected_s=fmt(f["expected"]), expected_se_s=fmt(f["se"]),
+                           fit_model=model, fit_e=f["e"],
+                           fit_max_residual_s=fmt(f["resid"]))
+            elif kind == "mem":
+                mem_update(row, rs, board, path)
 
     # first round: levels2's files, named <board>_<setting>
     first = dict((("pi_L1", ("pi0w", 1, "default", 1)), ("pi_L2", ("pi0w", 2, "default", 1)),

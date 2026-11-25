@@ -285,7 +285,7 @@ of the roughly 5,400 cycles per compression implied by the published time (table
 Each call also pays for the register writes, the ICM's own fetches of descriptor and data
 over the bus, polling, and the digest's byte order; none of this is documented as a cycle
 count or measured. This benchmark's measurements on other chips bracket the outcome
-without predicting it: on the RP2350 (one-core times in the report's Table D5 [report]),
+without predicting it: on the RP2350 (one-core times in the report's Table 7 [report]),
 SLH-DSA-SHA2-128s signing took 47.76 s in portable C, 12.90 s through the Pico SDK's SHA
 functions (3.70x), and 9.737 s through registers at `-O3` (4.9x); on the
 ESP32-S3 the SHA unit gave 3.80x [jade-notes]. In the other direction, Jade's mbedTLS

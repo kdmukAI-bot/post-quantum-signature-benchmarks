@@ -27,7 +27,7 @@ UPDATED = "2026-11-25"
 # everything above it is for a general reader, everything below it is detail to check.
 PARTBREAK_AT = re.compile(r"^(\d+\.?\s*)?(Detailed results|Detail)", re.I)
 
-# Table layout (owner, 2026-11-24): one alignment per column, and no line breaks inside a
+# Table layout: one alignment per column, and no line breaks inside a
 # value. A column is numeric when every cell that holds a value starts with a number;
 # cells that hold no value (empty, n/a, pending, a dash) do not decide it. Numeric
 # columns, header included, are right-aligned and never wrap, except that a trailing
@@ -43,9 +43,8 @@ LABEL_SEG_MAX = 40  # longer unbreakable stretches wrap normally instead
 HEAD_SEG_MAX = 30
 
 EXTRA_CSS = """
-/* Page width (owner, 2026-11-24): the series' 72ch column is narrow on a desktop screen.
-   55rem is close to GitHub's 980px content width at the laptop font size; phones are
-   unaffected, since the column already fills the screen there. */
+/* Page width: 55rem, close to GitHub's 980px content width at the laptop font size;
+   phones are unaffected, since the column already fills the screen there. */
 :root{ --measure:55rem; }
 .tablewrap td.num, .tablewrap th.num{ text-align:right; }
 .tablewrap th{ white-space:normal; font-family:var(--sans); font-size:.86rem;
@@ -284,8 +283,8 @@ def render(md_text):
 
         out = ["<table>"]
         cap = re.search(r"<caption>(.*?)</caption>", t, re.S)
-        # Table C1 is the summary ranking for casual readers: large type, narrow, colored.
-        summary = bool(cap and re.match(r"\s*Table C1\.", strip_tags(cap.group(1))))
+        # Table 1 is the summary ranking for casual readers: drawn as a chart.
+        summary = bool(cap and re.match(r"\s*Table 1\.", strip_tags(cap.group(1))))
         if cap:
             out.append(f"<caption>{cap.group(1)}</caption>")
         if head:
@@ -316,7 +315,7 @@ def render(md_text):
             return summary_chart(cap.group(1), heads, rows, is_group, table_html)
         return table_html
 
-    # Table titles (owner, 2026-11-24): a paragraph that is only a bold "Table X. ..."
+    # Table titles: a paragraph that is only a bold "Table X. ..."
     # line, directly above a table, becomes the table's caption, so the title (processor,
     # what, unit, configuration) sits inside the table's frame and a screenshot of the
     # table carries it.
@@ -327,7 +326,7 @@ def render(md_text):
 
 
 def summary_chart(title, heads, rows, is_group, table_html):
-    """Table C1 as a diverging bar chart (owner, 2026-11-24): one row per device, a vertical
+    """Table 1 as a diverging bar chart: one row per device, a vertical
     line at the baseline (1.0x), faster devices as green bars growing right, slower ones as
     red bars growing left. The scale is linear: a bar runs from 1.0x to its value, so
     "+13x" is twelve units long and "-2.1x" is 1.1 units long, the same units on both

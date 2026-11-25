@@ -369,6 +369,41 @@ if round2.RP2350_DATA:
 if pend or shown_mark or shown_pending:
     sys.exit("round-3 data missing: the template's captions and footnote no longer hold")
 
+# Table numbers as the reader sees them: 1, 2, 3, ... in page order, with a, b, or c for
+# the parts of a split table. The generator and the checks above use internal labels (C1,
+# K1, D1 to D18, H4, H5); the final text gets the reader's numbers, in captions and in
+# every "Table X" or "Tables X, Y, and Z" reference, and is reflowed again.
+LABEL = r"[A-Z]\d+[a-c]?"
+
+
+def renumber(text):
+    mapping, base_no = dict(), dict()
+    for lab in re.findall(r"^\*\*Table (" + LABEL + r")\.", text, flags=re.M):
+        base, part = re.match(r"([A-Z]\d+)([a-c]?)$", lab).groups()
+        base_no.setdefault(base, len(base_no) + 1)
+        mapping[lab] = f"{base_no[base]}{part}"
+    sep = r"(?:,\s+and\s+|,\s+|\s+and\s+|\s+to\s+)"
+    ref = re.compile(r"\bTables?\s+" + LABEL + r"(?:" + sep + LABEL + r")*\b")
+    unknown = []
+
+    def one(m):
+        def lab(x):
+            if x.group(0) not in mapping:
+                unknown.append(x.group(0))
+                return x.group(0)
+            return mapping[x.group(0)]
+        return re.sub(r"\b" + LABEL + r"\b", lab, m.group(0))
+
+    out = ref.sub(one, text)
+    assert not unknown, f"table references to labels with no caption: {unknown}"
+    return out, mapping
+
+
+numbered, TABLE_NUMBERS = renumber(final)
+open(args.out, "w").write(numbered)
+subprocess.run([sys.executable, "-I", os.path.join(HERE, "reflow_md.py"), args.out], check=True)
+print("table numbers: " + ", ".join(f"{k} {v}" for k, v in TABLE_NUMBERS.items()))
+
 # results/summary.csv and results/raw/MANIFEST.csv, from the data the tables used.
 summary = load("summary")
 srows, mrows = summary.write(round2, levels2, round2.FIT)

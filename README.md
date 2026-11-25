@@ -46,6 +46,14 @@ and `jade-s3` (Blockstream's Jade firmware timed on the ESP32-S3 board); rounds 
 
 ## Reproduction
 
+Prerequisites: git, Python 3, and Docker. Every board's build runs in a pinned Docker
+image: the Pi Zero in `ghcr.io/kdmukai-bot/seedsigner-raspi-lvgl/sdk-armv6:ss-os-0.8.0-81-gbfbd791`
+and the Pi Zero 2 W in `ghcr.io/kdmukai-bot/seedsigner-raspi-lvgl/sdk-pi02w:ss-os-0.8.0-81-gbfbd791`
+(SeedSigner OS's SDK images), the ESP32 boards in
+`ghcr.io/kdmukai-bot/seedsigner-micropython-builder-base:idf-v5.5.5`, all pulled by the
+build scripts, and the RP2350 in an image you build once:
+`docker build -t pqb-rp2350:sdk2.3.1-gcc14.2 harness/pico/docker`.
+
 ```
 git clone --recurse-submodules https://github.com/kdmukAI-bot/post-quantum-signature-benchmarks
 cd post-quantum-signature-benchmarks
@@ -78,7 +86,10 @@ missing:
 
 ## License
 
-MIT for the code in this repository (`LICENSE`). The submodules under `third_party/`
-keep their own licenses. `assets/fonts.css` embeds Inconsolata (SIL Open Font License
-1.1, The Inconsolata Project Authors) and Open Sans (Apache License 2.0), unmodified,
-with their copyright and license notices in the font files.
+MIT for the code in this repository (`LICENSE`), except the OpenSSL-derived SHA-256
+assembly (`harness/linux/shim/openssl-armv4/`, `harness/linux/shim/openssl-neon/`, and
+`harness/pico/sha256_armv4_thumb.S`), which keeps OpenSSL's Apache License 2.0
+(`harness/linux/shim/LICENSE-OpenSSL-Apache-2.0.txt`). The submodules under
+`third_party/` keep their own licenses. `assets/fonts.css` embeds Inconsolata (SIL Open
+Font License 1.1, The Inconsolata Project Authors) and Open Sans (Apache License 2.0),
+unmodified; their license texts are in `assets/font-licenses/`.

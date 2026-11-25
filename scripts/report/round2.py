@@ -90,9 +90,9 @@ FIT = load("grind_fit_r2", os.path.join(ROOT, "scripts", "grind_fit_r2.py"))
 SUMM = load("summarize", os.path.join(ROOT, "scripts", "summarize.py"))
 NF = load("numfmt", os.path.join(HERE, "numfmt.py"))
 
-# The one setting for board order: fastest first (owner, 2026-11-24; K1 holds this order
-# on every row). Every table column, row group, per-board table (D1 to D5), and generated
-# list follows it. The RP2350's hash-based operations take 1.10 to 1.49 times the
+# The one setting for board order: fastest first (K1 holds this order on every row).
+# Every table column, row group, per-board table (D1 to D5), and generated list follows
+# it. The RP2350's hash-based operations take 1.10 to 1.49 times the
 # ESP32-S3's time, so it is last.
 BOARDS = ("pi2", "pi", "p4", "s3", "rp")
 PI_BOARDS = tuple(b for b in BOARDS if b in ("pi", "pi2"))
@@ -673,6 +673,8 @@ def time_cell(tab, row, col, board, level, op, v="B", swn=None, dc=0, unit="ms",
     if stat == "expected_l140":
         f = FIT.fit_shrincs_l(rs, dc == 1)
         x, u = f["expected"][140], f["se"][140]
+        w140 = [r["wall_s"] for r in rs if r["swn"] == "140"]
+        S.setdefault("l140_span", dict())[(board, level, dc)] = (min(w140), max(w140))
         note_summary("fit", board, level, op, v, swn, dc, rnd, path, rs,
                      dict(model="shrincs-l stateful: time = fixed + k x wots attempts",
                           expected=x, se=u, e="swn=140", resid=f["resid"]))
@@ -738,15 +740,26 @@ def t_hash_board(tab, board):
 # BOARDS and puts a title line (board, chip, clock, what, unit, configuration) above each.
 # {ref:b} is replaced by board b's table label.
 HASH_CAPTION = dict((
-    ("pi", "Means of n=100 runs over inputs 0 to 99, second round{{fn:grinding}}{{fn:layout}}."),
-    ("pi2", "Means of n=100 runs over inputs 0 to 99, round 4, at 1 GHz{{fn:pi2-clock}}"
-            "{{fn:grinding}}; XMSS 2^10 has no two-core path and ran on one core only."),
-    ("p4", "Means of n=10 runs over inputs 0 to 9, second round; XMSS 2^10 has no two-core "
-           "path."),
-    ("s3", "As Table {ref:p4}."),
-    ("rp", "Means of n=10 runs over inputs 0 to 9, round 4{{fn:rp-replay}}{{fn:rp-l2-dc}}; "
-           "XMSS 2^10 has no two-core path."),
+    ("pi", "Means of n=100 runs over inputs 0 to 99{{fn:grinding}}{{fn:layout}}. {span}"),
+    ("pi2", "Means of n=100 runs over inputs 0 to 99{{fn:grinding}}. {span} XMSS 2^10 has no "
+            "two-core path and was run in the one-core build only, so its two-core cells "
+            "read n/a."),
+    ("p4", "Means of n=10 runs over inputs 0 to 9. {span} XMSS 2^10 has no two-core path: "
+           "its two-core cells time it on one core of the two-core build."),
+    ("s3", "As Table {ref:p4}. {span}"),
+    ("rp", "Means of n=10 runs over inputs 0 to 9{{fn:rp-replay}}{{fn:rp-l2-dc}}. {span} "
+           "XMSS 2^10 has no two-core path: its two-core cells time it on one core of the "
+           "two-core build."),
 ))
+
+
+def l140_span(b):
+    """Caption sentence: the SHRINCS-L stateful figure's ± covers the fit only; how long
+    single messages took at swn=140 on this board (level 3, one core)."""
+    lo, hi = S["l140_span"][(b, 3, 0)]
+    return (f"The SHRINCS-L expected value's ± is the fit's standard error, not the spread "
+            f"between messages: at level 3 on one core, single messages at swn=140 took "
+            f"{NF.rsig(lo, 2, cap=False)} to {NF.rsig(hi, 2, cap=False)} s.")
 
 
 def hash_tables(T):
@@ -755,6 +768,7 @@ def hash_tables(T):
     for b in BOARDS:
         tab = HASH_TAB[b]
         cap = re.sub(r"\{ref:(\w+)\}", lambda m: HASH_TAB[m.group(1)], HASH_CAPTION[b])
+        cap = cap.replace("{span}", l140_span(b))
         cfg = "by level, one core" if b == "pi" else "by level and cores"
         out.append(f"{cap}\n\n"
                    f"**Table {tab}. {S['boards'][b]['title']}: hash-based signing and key "
@@ -834,6 +848,23 @@ def stateless_fit(board, level, v, dc):
     return f
 
 
+def wide_note(wide):
+    """Caption text for the stateless fits whose standard error is far above the rest:
+    two-core SHRINCS-B fits, named by board and level."""
+    if not wide:
+        return ""
+    assert all(dc == 1 and v == "B" for _, dc, v, _, _, _ in wide), wide
+    by_board = collections.OrderedDict()
+    for b, _, _, lvl, _, _ in wide:
+        by_board.setdefault(b, []).append(str(lvl))
+    where = table_list(f"the {BOARD_NAME[b]} at level{'s' if len(l) > 1 else ''} "
+                       f"{table_list(l)}" for b, l in by_board.items())
+    return (f" The larger standard errors of two-core SHRINCS-B ({where}) come from the fit: "
+            f"the few WOTS+C attempts at swn=2040 are split between the cores by counter "
+            f"parity, and over these messages the two per-core counts vary too little to fix "
+            f"their terms.")
+
+
 def three_term_resid(rs, v):
     """Largest residual of the fit without the tree-work term (one core)."""
     g = [FIT.grind(r) for r in rs]
@@ -850,6 +881,7 @@ def t_stateless():
     cols = [(v, lvl) for v in ("B", "L") for lvl in LEVELS]
     rows = []
     r3, r4 = [], []
+    spread, rp_runs, wide = [], [], []
     for b, dc in [(b, dc) for b in BOARDS for dc in ((0,) if b == "pi" else (0, 1))]:
         lab = f"{BOARD_NAME[b]}, {CORES[dc]}"
         cells = []
@@ -865,6 +897,12 @@ def t_stateless():
             r4.append(f["resid"])
             if not dc:
                 r3.append(three_term_resid(f["rows"], v))
+            w = [r["wall_s"] for r in f["rows"]]
+            spread.append((min(w) / f["expected"], max(w) / f["expected"]))
+            if b == "rp":
+                rp_runs.extend(w)
+            if f["se"] > 0.5:
+                wide.append((b, dc, v, lvl, f["se"], f["n"]))
             row = collections.OrderedDict((
                 ("board", BOARD_NAME[b]), ("cores", dc + 1),
                 ("scheme", f"SHRINCS-{v}"), ("level", lvl), ("n", f["n"]),
@@ -884,18 +922,22 @@ def t_stateless():
                  ("e_wots_b", f"{FIT.e_wots('B', 2040):,.1f}"),
                  ("e_wots_l", f"{FIT.e_wots('L', 140):,.0f}"),
                  ("r3", f"{max(r3):.1f}" if r3 else "n/a"),
-                 ("r4", f"{max(r4):.2f}" if r4 else "n/a")))
+                 ("r4", f"{max(r4):.2f}" if r4 else "n/a"),
+                 ("spread_lo", NF.rsig(min(a for a, _ in spread), 2, cap=False)),
+                 ("spread_hi", NF.rsig(max(b for _, b in spread), 2, cap=False)),
+                 ("rp_min", f"{min(rp_runs) / 60:.0f}"), ("rp_max", f"{max(rp_runs) / 60:.0f}"),
+                 ("wide", wide_note(wide))))
     return table(["Board, cores"] + [f"SHRINCS-{v}, level {lvl}" for v, lvl in cols], rows), note
 
 
 def t_blockstream(L2):
-    """Table H4: level 3 against Blockstream's published figures; ESP32 boards on two
-    cores, as before; swn=96 appears only here."""
+    """Table H4: level 3 against Blockstream's published figures, one core on every board
+    (Jade's release signs on one core); swn=96 appears among the signing results only here
+    and in the round comparisons."""
     tab = "H4"
     _CUR[0] = tab
-    cols = [("pi", 0), ("p4", 1), ("s3", 1)]
-    head = (["Operation"] + [BOARD_NAME[b] + ("" if b == "pi" else ", two cores")
-                             for b, dc in cols] + L2.PUB_COLS)
+    cols = [("pi", 0), ("p4", 0), ("s3", 0)]
+    head = ["Operation"] + [BOARD_NAME[b] for b, dc in cols] + L2.PUB_COLS
     ours = dict((
         (("slh_dsa_sign", ""), ("Signing", "SLH-DSA-SHA2-128s")),
         (("sphincs40_sign", ""), ("Signing", "SPHINCS+ 2^40")),
@@ -970,8 +1012,8 @@ def verify_dc_note():
     return (f"The ESP32 two-core builds run the same verification code. In the second "
             f"round, over the {n} verification operations of 3 ms or more measured in both, "
             f"the two-core mean differs from the one-core mean by at most {worst[0]:.1f}% "
-            f"({worst[3]}, {BOARD_NAME[worst[1]]}, level {worst[2]}). Round 3 reruns the "
-            f"one-core builds only; Table D8b gives one core.")
+            f"({worst[3]}, {BOARD_NAME[worst[1]]}, level {worst[2]}). The third round "
+            f"reran the one-core builds only, so Table D8b gives one core.")
 
 
 # ---------------------------------------------------------------- 4.3 lattice
@@ -1261,7 +1303,10 @@ def t_memory(tab, boards):
     _CUR[0] = tab
     rows = []
     group = None
+    pi_only = all(b in PI_BOARDS for b in boards)
     for g, lab, op, v, swn, dc, merged in mem_rows_spec():
+        if dc and pi_only:
+            continue  # the Pi boards' memory builds ran on one core only
         if g != group:
             rows.append(group_row(g, 2 * len(boards)))
             group = g
@@ -1287,7 +1332,8 @@ def t_memory_max(tab, boards):
         if g != group:
             rows.append(group_row(g, 2 * len(boards)))
             group = g
-        lab = lab + " (one and two cores)" if merged else lab
+        lab = lab + " (one and two cores)" if merged and not all(
+            b in PI_BOARDS for b in boards) else lab
         cells = []
         for b in boards:
             best_s, best_h = None, None
@@ -1504,12 +1550,12 @@ K1_GROUPS = [
         ("SHRINCS-B, stateless", None, "B", ("shrincs_sign_stateless", "B"), True, ""),
         ("SHRINCS-L, stateless", None, "L", ("shrincs_sign_stateless", "L"), True, ""),
     ]),
-    (K1_STATEFUL, K1_STATEFUL + "{{fn:fixed-keys}}", [
+    (K1_STATEFUL, K1_STATEFUL, [
         ("SHRINCS-B", "SHRINCS-B, stateful", "B", ("shrincs_sign", "B"), False,
-         "{{fn:shrincs-q}}"),
+         "{{fn:fixed-keys}}"),
         ("SHRINCS-L, swn=140", "SHRINCS-L, stateful, swn=140 (expected)", "L",
-         ("shrincs_sign", "L"), True, "{{fn:shrincs-q}}"),
-        ("XMSS 2^10", "XMSS 2^10", "B", ("xmss_sign", "B"), False, ""),
+         ("shrincs_sign", "L"), True, "{{fn:grinding}}"),
+        ("XMSS 2^10", "XMSS 2^10", "B", ("xmss_sign", "B"), False, "{{fn:fixed-keys}}"),
     ]),
     (K1_LATTICE, K1_LATTICE + "{{fn:deterministic}}",
      [(LAT_LABEL[s], sign_row(s), "B", (f"{s}_sign", "B"), s.startswith("mldsa"),
@@ -1555,55 +1601,21 @@ def k1():
                                  keys=[key], sig=3, mode="round", scale=1, factor=1,
                                  text=s + flag_of(key)))
                 cells.append(f"{s} {unit}" + ("*" if expected else "") + flag_of(key))
-            rows.append([label] + cells)
+            rows.append([label + fn] + cells)
     note = ("\\* Expected value per message: the signing time varies by message, and the "
             "figure comes from a fit over the measured messages (sections 3.1 and 3.3).")
-    ck = S["pi2_clock"]
-    note += (f" The Pi Zero 2 W ran at its rated 1 GHz; SeedSigner OS 0.8.7 runs it at 600 "
-             f"MHz, where its times are {ck['med']:.2f} times as long{{{{fn:pi2-clock}}}}.")
     if PEND:
         note += (f" {R2_MARK} Second-round figure, to be replaced by round "
                  f"3{{{{fn:r3}}}}.")
     return table(head, rows), note
 
 
-SCREEN_RE = re.compile(r"^pi02w-r4-screen(?:1g)?-(.*)-\d{8}_\d{6}\.csv$")
-
-
 def pi2_clock():
-    """The Pi Zero 2 W at 600 MHz against 1 GHz: per job of its two level-3 screens (the
-    same binaries and jobs, one at 600 MHz and one at 1 GHz; their logs are local only),
-    the 600 MHz mean wall time over the 1 GHz one. Also fills S["pi2_clock"]."""
-    _CUR[0] = "K1"
-
-    def jobs(sub):
-        out = dict()
-        for path in glob.glob(os.path.join(R4_DIR, sub, "pi02w-r4-*.csv")):
-            m = SCREEN_RE.match(os.path.basename(path))
-            rs = file_rows(path) if m else None
-            if rs:
-                out[m.group(1)] = rs
-        use(os.path.join(R4_DIR, sub, "*.csv"))
-        return out
-
-    slow, fast = jobs("screen"), jobs("screen1g")
-    common = sorted(set(slow) & set(fast))
-    assert common, "the Pi Zero 2 W screens are missing"
-    r = [statistics.mean(x["wall_s"] for x in slow[k]) / statistics.mean(x["wall_s"]
-                                                                       for x in fast[k])
-         for k in common]
-    S["pi2_clock"] = dict(n=len(r), lo=min(r), med=statistics.median(r), hi=max(r))
-    ck = S["pi2_clock"]
-    return (f"SeedSigner OS 0.8.7's image for the Pi Zero 2 W has no CPU frequency driver and "
-            f"no `force_turbo` setting, so the processor stays at its 600 MHz minimum clock "
-            f"(issue [SeedSigner/seedsigner-os#129]"
-            f"(https://github.com/SeedSigner/seedsigner-os/issues/129)). The board here ran a "
-            f"SeedSigner OS development image that behaves the same way; for this benchmark, "
-            f"`force_turbo=1` in its `config.txt` held the processor at its rated 1 GHz. Two "
-            f"screens ran the same {ck['n']} timing jobs (builds of all three levels, one and "
-            f"two cores) with the same binaries, one at each clock: each job's mean time at 600 "
-            f"MHz was {ck['lo']:.3f} to {ck['hi']:.3f} times its mean at 1 GHz (median "
-            f"{ck['med']:.3f}, against a clock ratio of 1.667).")
+    """The one footnote on the Pi Zero 2 W's clock, cited where the pages say it ran at
+    1 GHz: SeedSigner OS currently runs it at 600 MHz."""
+    return ("SeedSigner OS currently runs the Pi Zero 2 W at 600 MHz "
+            "([SeedSigner/seedsigner-os#129]"
+            "(https://github.com/SeedSigner/seedsigner-os/issues/129)).")
 
 
 # ---------------------------------------------------------------- C1: rough comparison
@@ -1618,6 +1630,10 @@ URL_PQM4 = "https://github.com/mupq/pqm4/tree/master/results/speed"
 # once at each table's "Chip and clock" header.
 CHIP_JADE = "ESP32-S3, 240 MHz"
 CHIP_SAFE3 = "STM32F427, 180 MHz, or STM32U585, 160 MHz"
+# Blockstream's signing column for Trezor reads "Trezor Safe 3/5/7": the Safe 3 (STM32F427
+# or STM32U585), the Safe 5 (STM32U585), and the Safe 7 (STM32U5G9).
+TREZOR_SIGN = "Trezor Safe 3/5/7"
+CHIP_TREZOR = "STM32F427, 180 MHz, or STM32U585 or STM32U5G9, 160 MHz"
 CHIP_LEDGER = "ST33K1M5 secure element, 70 or 75 MHz"
 CHIP_BITBOX = "ATSAMD51J20A (Cortex-M4F), 120 MHz"
 # Columns: (header, unit, our detail-table row for that scheme's signing).
@@ -1640,7 +1656,7 @@ C1_OTHERS = [
      f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "jade_plus", "1", None)),
            (1, (BS, dict(op="shrincs_b_sign"), "jade_plus", "1", None))))),
-    ("Trezor Safe 3", "{CHIP_SAFE3}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
+    (TREZOR_SIGN, "{CHIP_TREZOR}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
      dict(((0, (BS, dict(op="slh_dsa_sign"), "trezor_safe_3", "1", None)),
            (1, (BS, dict(op="shrincs_b_sign"), "trezor_safe_3", "1", None))))),
     ("Ledger Nano gen5/S+", "{CHIP_LEDGER}", f"[Blockstream, 2026-08-19]({URL_BLOCKSTREAM})",
@@ -1741,21 +1757,22 @@ def t_compare():
             logs.append(math.log(float(x) / ref[i]))
             if per:
                 chip = chip.replace("{clock:pqm4}", r[per])
-        chip = chip.format(CHIP_JADE=CHIP_JADE, CHIP_SAFE3=CHIP_SAFE3, CHIP_LEDGER=CHIP_LEDGER,
+        chip = chip.format(CHIP_JADE=CHIP_JADE, CHIP_TREZOR=CHIP_TREZOR,
+                           CHIP_LEDGER=CHIP_LEDGER,
                            CHIP_BITBOX=CHIP_BITBOX) if "{CHIP_" in chip else chip
         rows.append((sum(logs) / len(logs), label, chip, cells, source))
     rows.sort(key=lambda x: x[0])
     return table(head, [[lab, chip] + cells + [src] for _, lab, chip, cells, src in rows])
 
 
-# C1: a rough ranking by one factor (owner, 2026-11-24): each device's signing time for
+# C1: a rough ranking by one factor: each device's signing time for
 # SLH-DSA-SHA2-128s and for SHRINCS-B stateful signing, divided by the fastest device's
 # time for that scheme; the factor is the geometric mean of the two ratios. Devices: ours
 # (level 3, one core, the detail cells as displayed) and Blockstream's four wallets.
 C1_SCHEMES = [("SLH-DSA-SHA2-128s", "SLH-DSA-SHA2-128s", dict(op="slh_dsa_sign")),
               ("SHRINCS-B", "SHRINCS-B, stateful", dict(op="shrincs_b_sign"))]
 C1_WALLETS = [("Jade Plus", CHIP_JADE, "jade_plus"),
-              ("Trezor Safe 3", CHIP_SAFE3, "trezor_safe_3"),
+              (TREZOR_SIGN, CHIP_TREZOR, "trezor_safe_3"),
               ("Ledger Nano gen5/S+", CHIP_LEDGER, "ledger_nano_gen5_splus"),
               ("BitBox02 Nova", CHIP_BITBOX, "bitbox02_nova")]
 C1_HEAD_PLAIN = "Relative to the Jade Plus"
@@ -1763,7 +1780,7 @@ C1_HEAD = C1_HEAD_PLAIN + "{{fn:c1-method}}"
 C1_BASE = "Jade Plus"  # the baseline: Blockstream's published figure, 1.0x
 MINUS = "\u2212"
 C1_OURS = "Boards tested here"
-# Single-scheme rows (owner, 2026-11-24): a result with one scheme, compared with the
+# Single-scheme rows: a result with one scheme, compared with the
 # baseline on that scheme only; (label as shown, footnote, scheme index, transcription
 # spec).
 C1_SINGLE = [("Trezor Safe 7 (test build)", "{{fn:tz-hw}}", 0,
@@ -1823,8 +1840,8 @@ def t_rank():
         rel = vals[C1_BASE][i] / c1_value(spec)
         single[label] = (rel, fnm, [spec, base_specs[i]])
         factor[label] = fb / rel
-    # No group rows and no fastest or slowest tags (owner, 2026-11-24): the green and red
-    # values and the chart's bars carry the direction.
+    # No group rows and no fastest or slowest tags: the green and red values and the
+    # chart's bars carry the direction.
     measured = sorted([d for d in devs if d[2]] + [(None, k, None) for k in single],
                       key=lambda d: factor[d[1]])
     for _, label, specs in measured:
@@ -1876,9 +1893,9 @@ def t_rank():
           f"(`results/published/blockstream_2026-08-19.csv`). Their chips and clocks come "
           f"from vendor and certification documents, not from the post: "
           + "; ".join(f"{lab}, {chip}" for lab, chip, _ in C1_WALLETS)
-          + " (Jade Plus: Jade's build configuration; Blockstream does not say which "
-          "hardware revision of the Trezor Safe 3 it timed; "
-          "`docs/other-devices-hash-hardware.md`).")
+          + " (Jade Plus: Jade's build configuration; Blockstream's Trezor signing figures "
+          "are labeled Trezor Safe 3/5/7, and it does not say which model or hardware "
+          "revision it timed; `docs/other-devices-hash-hardware.md`).")
     return table(head, rows), fn
 
 
@@ -1918,20 +1935,22 @@ def discussion(L2):
     def wv(specs):
         return [c1_value(x) for x in specs]
 
-    # Headline level only (owner, 2026-11-24: a summary for casual readers): the figures a
-    # reader needs, each checked; the breakdowns live in section 3 (K1, D18, H5).
+    # Headline level only (a summary for casual readers): the figures a reader needs,
+    # each checked; the breakdowns live in section 3 (K1, D18, H5).
     ours = [b for b in BOARDS if b != "rp" or RP2350_DATA]
-    mine = [hash_sign_key(b, row) for b in ours for _, row, _ in C1_SCHEMES]
+    slh_row = C1_SCHEMES[0][1]
+    mine = [hash_sign_key(b, slh_row) for b in ours]
     top = max(cval(k) for k in mine)
     limit = int(top) + 1
     REFS.append(dict(kind="bound", inputs=[cs(k) for k in mine], limit=str(limit),
                      text=f"under {limit} seconds"))
     w_slh, w_shr = wal("slh_dsa_sign"), wal("shrincs_b_sign")
-    w_all = w_slh + w_shr
     speed = (
+        f"Signing with {C1_SCHEMES[0][0]}, the standardized hash-based scheme that needs "
+        f"nothing saved between signatures:\n\n"
         f"- **SeedSigner ecosystem boards:** under {limit} seconds.\n"
         f"- **Hardware wallets in Blockstream's tests:** "
-        f"{quote('min', w_all, wv(w_all), 2)} to {quote('max', w_all, wv(w_all), 2)} "
+        f"{quote('min', w_slh, wv(w_slh), 2)} to {quote('max', w_slh, wv(w_slh), 2)} "
         f"seconds.")
     s3_slh, s3_shr = (hash_sign_key("s3", row) for _, row, _ in C1_SCHEMES)
     jade = [x for x in w_slh if x["column"] == "jade_plus"][0]
@@ -1942,15 +1961,24 @@ def discussion(L2):
                                                   scheme="SPHINCS+ SHA2-128s", op="sign"),
               column="seconds", factor="1", per=None)
     s7v = c1_value(s7)
-    same_chip = quote("gm-ratio", [jade, jade_shr, cs(s3_slh), cs(s3_shr)],
-                      [jv, jsv, cval(s3_slh), cval(s3_shr)], 1)
+    # Low end: Jade's own firmware timed on our ESP32-S3 board (Table D18) against our
+    # level-3 build; high end: Blockstream's published Jade Plus figures against it.
+    cal = [dict(kind="cell", key=["D18", lab, "Jade firmware, our ESP32-S3 board (s)"])
+           for lab in ("SLH-DSA-SHA2-128s sign", "SHRINCS-B sign")]
+    calv = [NF.dnum(L2.cal_value(op)) for op in ("slh_dsa_sign", "shrincs_b_sign")]
+    lo = quote("gm-ratio", cal + [cs(s3_slh), cs(s3_shr)],
+               calv + [cval(s3_slh), cval(s3_shr)], 1)
+    hi = quote("gm-ratio", [jade, jade_shr, cs(s3_slh), cs(s3_shr)],
+               [jv, jsv, cval(s3_slh), cval(s3_shr)], 1)
+    same_chip = f"{lo} to {hi}" if lo != hi else lo
     faster = (
         f"- **Same chip, different result:** the Jade Plus uses the same chip as our "
         f"ESP32-S3 board, yet our build signs about {same_chip} times as fast, largely by "
         f"making better use of the chip's SHA-256 hardware.\n"
-        f"- **Trezor too:** a Trezor developer who did the same on a Trezor signed about "
+        f"- **Trezor too:** a Trezor developer's test firmware signed about "
         f"{quote('ratio', [safe3, s7], [s3v, s7v], 1)} times as fast as Blockstream's "
-        f"Trezor figure{{{{fn:tz-hw}}}}.\n"
+        f"Trezor figure, using a hash unit that production Trezor firmware does not let "
+        f"applications use{{{{fn:tz-hw}}}}.\n"
         f"- **Open question:** how much faster the other wallets could sign.")
     return speed, faster
 
@@ -2087,6 +2115,16 @@ def shrincs_q_note(rule):
             f"benchmark signs with q = 1 (`harness/common/op_shrincs.c`), the size shown.")
 
 
+def heap_text(env):
+    """Free heap before a job set at levels 1 and 3, to the nearest thousand bytes (it
+    varies by a few hundred bytes between job sets; docs/environments/ gives the
+    ranges)."""
+    k = dict((l, round(int(env[l]["heap_free_internal"]) / 1000)) for l in (1, 3))
+    if k[1] == k[3]:
+        return f"about {k[1]:,},000 bytes at levels 1 and 3"
+    return f"about {k[1]:,},000 bytes at level 1 and {k[3]:,},000 at level 3"
+
+
 def t_boards():
     """Boards: chip, cores, and clock from the ESP32 logs' #env lines and the Pi Zero's
     clock checks; RAM as the summaries record it. Also fills S["boards"] (processor and
@@ -2149,8 +2187,7 @@ def t_boards():
                     env[lvl] = dict(x.split("=", 1) for x in ln.strip().split(",")[1:]
                                     if "=" in x)
         e = env[3]
-        heap = " and ".join(f"{int(env[l]['heap_free_internal']):,} bytes at level {l}"
-                            for l in (1, 3))
+        heap = heap_text(env)
         brief = f"chip revision {e['chip_rev']}, {words.get(e['cores'], e['cores'])} cores"
         proc = f"{e['target'].upper().replace('ESP32', 'ESP32-')} ({brief.replace(', ', '), ', 1)}"
         S["boards"][b] = dict(proc=proc, brief=brief, clock=f"{e['cpu_mhz']} MHz",
@@ -2175,8 +2212,7 @@ def t_boards():
     assert e["target"] == "rp2350" and e["package"] == "QFN60", e
     mhz = e["cpu_mhz"]
     flash_mhz = int(mhz) / int(e["flash_clkdiv"])
-    heap = " and ".join(f"{int(env[l]['heap_free_internal']):,} bytes at level {l}"
-                        for l in (1, 3))
+    heap = heap_text(env)
     proc = (f"RP2350A (chip revision {e['chip_rev']}), {words.get(e['cores'], e['cores'])} "
             f"Arm Cortex-M33 cores used (its two Hazard3 RISC-V cores are not); one SHA-256 "
             f"accelerator, shared by both cores, that cannot resume from a saved state")
@@ -2204,7 +2240,8 @@ def tested_schemes():
         f"SHRINCS-B and SHRINCS-L, stateless: {n('shrincs_sign_stateless')} and "
         f"{n('shrincs_sign_stateless', 'L')} bytes",
         f"XMSS 2^10: {n('xmss_sign')} bytes",
-        "implementation: Blockstream's code in the Jade fork (jade-hbs @ f5c90a5e), unmodified"))
+        "implementation: Blockstream's code in the Jade fork (jade-hbs @ f5c90a5e), with "
+        "two build-time edits (methods page, Implementations and inputs)"))
     lat = "<br>".join((
         f"ML-DSA-44, -65, and -87: {n('mldsa44_sign')}, {n('mldsa65_sign')}, and "
         f"{n('mldsa87_sign')} bytes; mldsa-native v2.0.0, default and reduced-RAM "
@@ -2244,51 +2281,36 @@ def r3_expected():
     return out
 
 
-def t_status():
-    """Run status: round 2 per board from the run plans, round 3 from the files found."""
-    pi_plan = [ln for ln in open(os.path.join(ROOT, "scripts", "r2_plans", "pi0w.plan"))
-               if ln.strip() and not ln.startswith("#")]
-    pi_files = [p for k, p in S["pi"].items() if k[0] == 2]
-    assert len(pi_files) == len(pi_plan), (len(pi_files), len(pi_plan))  # one per job
-    rows = [["2", "Pi Zero", f"{len(pi_plan)} jobs", "all", ""]]
-    for b in ("p4", "s3"):
-        done = [k for k in S["plan"][b] if (2,) + k[:6] in S["esp"]]
-        run = [os.path.basename(p) for p in S["esp_running"]
-               if os.path.basename(p).startswith(f"{b}-r2-")]
-        rows.append(["2", BOARD_NAME[b], f"{len(S['plan'][b])} job sets", str(len(done)),
-                     ("log being written: " + ", ".join(f"`{r}`" for r in run)) if run
-                     else ""])
-    exp = r3_expected()
-    for b in ("pi",) + ESP_BOARDS:
-        mine = [e for e in exp if e[0] == b]
-        done = 0
-        for _, lvl, v, what in mine:
-            if b == "pi":
-                done += (3, lvl, False, v, what, "") in S["pi"]
-            else:
-                done += esp_path(3, b, lvl, v, 0, what, nmin=100 if what == "lattice" else 1) \
-                    is not None
-        run = [os.path.basename(p) for p in S["esp_running"]
-               if os.path.basename(p).startswith(f"{b}-r3-")]
-        unit = "jobs" if b == "pi" else "job sets"
-        rows.append(["3", BOARD_NAME[b], f"{len(mine)} {unit} expected", str(done),
-                     ("log being written: " + ", ".join(f"`{r}`" for r in run)) if run
-                     else ""])
-    planned = S["pi2_planned"]
-    rows.append(["4", "Pi Zero 2 W", f"{len(planned)} jobs",
-                 str(sum(1 for k in planned if k in S["pi2"])),
-                 "level-2 memory from the rerun plan "
-                 "`scripts/r4_pi02w_plans/pi02w-l2mem.plan`{{fn:pi2-mem}}"])
-    if not RP2350_DATA:
-        rows.append(["4", "RP2350", "in progress", "–", "not yet in this draft"])
-    else:
-        planned = S["rp_planned"]
-        run = [os.path.basename(p) for p in S["rp_running"]]
-        rows.append(["4", "RP2350", f"{len(planned)} job sets",
-                     str(sum(1 for k in planned if k in S["rp"])),
-                     ("log being written: " + ", ".join(f"`{r}`" for r in run)) if run
-                     else ""])
-    return table(["Round", "Board", "Planned", "Complete", "Note"], rows)
+def pause_note():
+    """Methods text: the vTaskDelay(1) pauses in Jade's WOTS+C grinding loops. On one core
+    the loop pauses once at counter 0 and once per 100,000 counter values; each pause
+    lasts until the next 10 ms tick (100 Hz), between 0 and 10 ms. An estimate from the
+    expected attempt count, set against the microcontrollers' level-3 one-core figures."""
+    e = FIT.e_wots("L", 140)
+    calls = 1 + e / 100000
+    shares = []
+    for b in MCU_BOARDS:
+        c = cell(*hash_sign_key(b, "SHRINCS-L, stateful, swn=140 (expected)"))
+        if c["value"] is None:
+            continue
+        shares.append((b, c["value"]))
+    fast = min(shares, key=lambda x: x[1])
+    slow = max(shares, key=lambda x: x[1])
+    lo_s, hi_s = calls * 0.005, calls * 0.010
+    return (f"Jade's WOTS+C grinding loops call `vTaskDelay(1)`: on one core once at the "
+            f"start and once every 100,000 counter values, and in the two-core code once every "
+            f"100,000 counter values on the second core. On the ESP32 boards and the RP2350 "
+            f"each call waits for the next FreeRTOS tick (100 Hz), between 0 and 10 ms, and "
+            f"that wait is inside the timed call; on the Pi boards the call does nothing "
+            f"(`harness/linux/shim/freertos/task.h`). An estimate, not a measurement: "
+            f"SHRINCS-L stateful signing at swn=140 needs {e:,.0f} attempts on average, so "
+            f"about {calls:.0f} pauses per message on one core, about "
+            f"{lo_s:.1f} to {hi_s:.1f} s, which is {lo_s / slow[1] * 100:.1f} to "
+            f"{hi_s / fast[1] * 100:.1f}% of the microcontrollers' level-3 one-core figures "
+            f"({BOARD_NAME[fast[0]]} fastest, {BOARD_NAME[slow[0]]} slowest). Stateless signing "
+            f"grinds WOTS+C at two layers, so it pauses about twice as often, a smaller share of "
+            f"its much longer time; SHRINCS-B's grinding at swn=2040 needs too few attempts to "
+            f"pause more than once.")
 
 
 def correctness():
@@ -2336,18 +2358,21 @@ def correctness():
                         kind in (("shrincs_sign", "B", "2040"), ("shrincs_sign", "L", "96"))), \
                     (kind, r["verified"])
     assert ver[True] + ver[False] == ndiff, (ver, ndiff)
-    r3txt = (f", {len(r3)} complete round-3 jobs and job sets," if r3 else
-             ", no complete round-3 job,")
+    r3txt = (f", {len(r3)} third-round jobs and job sets," if r3 else
+             ", no third-round job,")
+    m = re.match(r"PASS: (\d+)/(\d+) rows pass", total[-1]) if total else None
+    verdict = (f"{int(m.group(1)):,} of {int(m.group(2)):,} rows pass" if m else
+               (total[-1] if total else "no result"))
     return (f"`scripts/check_r2.py` against the host reference outputs over every "
             f"second-round job used here ({npi} Pi Zero jobs and "
-            f"{len(files) - npi} complete ESP32 job sets){r3txt} the {len(r4)} round-4 Pi "
-            f"Zero 2 W jobs, and the {len(rp)} round-4 RP2350 job sets used: "
-            f"{total[-1] if total else 'no result'}. Every output equals the host's byte for "
+            f"{len(files) - npi} complete ESP32 job sets){r3txt} the {len(r4)} fourth-round "
+            f"Pi Zero 2 W jobs, and the {len(rp)} fourth-round RP2350 job sets used: "
+            f"{verdict}. Every output equals the host's byte for "
             f"byte except {ndiff} two-core SHRINCS signatures in {len(dual)} job groups, where "
             f"Blockstream's dual-core grinding returned a different counter. {ver[True]} of "
             f"them (self-tests and stateless signing) verified; the other {ver[False]} are "
             f"SHRINCS-B stateful signatures made with the fixed key and SHRINCS-L signatures "
-            f"at swn=96, which cannot be verified (Independent verification, below).")
+            f"at swn=96, which cannot be verified (independent verification, below).")
 
 
 def openssl_note():
@@ -2550,8 +2575,8 @@ def build(L2, csv_dir=None):
     use(os.path.join(HOST, "reference-B.csv"))
     use(os.path.join(HOST, "reference-L.csv"))
     T["CORRECTNESS"] = correctness()
+    T["TIMING_PAUSES"] = pause_note()
     T["OPENSSL_SLH"], T["OPENSSL_MLDSA"] = openssl_note()
-    T["STATUS"] = t_status()
     T["L140_M10"] = l140_m10()
     T["E_WOTS_L140"] = f"{FIT.e_wots('L', 140):,.0f}"
     e = FIT.MLDSA_E_LIB

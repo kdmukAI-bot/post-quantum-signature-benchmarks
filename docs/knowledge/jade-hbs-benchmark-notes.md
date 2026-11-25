@@ -98,7 +98,7 @@ in the public sources examined, but Jade's configs run it in the same octal mode
 on the Waveshare board.
 
 For SHRINCS and XMSS, the benchmark's plain-C build is faster than Jade's hardware-SHA path on
-the same board (SHRINCS-B signing 11.09 s against 16.20 s), consistent with the mbedTLS
+the same board (SHRINCS-B signing 11.09 s against 16.19 s), consistent with the mbedTLS
 per-call overhead. That path also makes more function calls per hash, which fits the larger
 cost of the "all" stack protector there.
 

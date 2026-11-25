@@ -1,6 +1,6 @@
 """First-round figures for results/combined_draft.md. The main tables use the second
 round (round2.py); the first round stays in the cost of
-safeguards (Table D10: Pi Zero stack protector and linking; ESP32 compiler stack
+safeguards (Tables D17a and D17b: Pi Zero stack protector and linking; ESP32 compiler stack
 protector), the Jade firmware calibration (Table D18), and the reproducibility comparison
 (round2.py reads the first-round files itself). Run from the repository root (fill.py
 loads it from there). Writes out/tables2.md under this script's directory; round2.py reads
@@ -121,7 +121,10 @@ for line in open("results/published/blockstream_2026-08-19.csv"):
         continue
     f = line.strip().split(",")
     pubrows[(f[0], f[1])] = f[3:7]
-PUB_COLS = ["Jade Plus", "Trezor Safe 3", "Ledger Nano gen5/S+", "BitBox02 Nova"]
+# Blockstream labels its Trezor signing column "Trezor Safe 3/5/7" and its key generation
+# column "Trezor Safe 3"; one column here holds both, footnoted.
+PUB_COLS = ["Jade Plus", "Trezor Safe 3/5/7{{fn:trezor-label}}", "Ledger Nano gen5/S+",
+            "BitBox02 Nova"]
 
 ROWS = [
     ("SLH-DSA-SHA2-128s sign", ("slh_dsa_sign", "")),
@@ -168,6 +171,11 @@ def fmt(col, key):
     if x is None:
         return "not run"
     return NF.num(x, sd(col, key), Q)
+
+
+def cal_value(op):
+    """Table D18's figure for Jade's firmware on our ESP32-S3 board, as displayed."""
+    return fmt("s3_jade", (op, ""))
 
 
 def pubcell(key):

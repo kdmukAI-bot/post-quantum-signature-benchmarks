@@ -6,9 +6,9 @@ output until the app prints '#done' (or a timeout passes).
 Usage: esp_capture.py <port> <out_file> [--max-seconds N] [--no-reset] [--send-start]
                       [--command "run <set> [n]"]
 
-The reset uses esptool's RTS sequence with DTR deasserted, so the chip boots normally (the
-same method as esp-board-common/.claude/scripts/reset_and_capture.py). Use --no-reset for
-USB-Serial/JTAG consoles, where the host cannot reset the chip this way; reset by hand.
+The reset uses esptool's RTS sequence with DTR deasserted, so the chip boots normally. Use
+--no-reset for USB-Serial/JTAG consoles, where the host cannot reset the chip this way;
+reset by hand.
 
 --command (round-2 builds): send this line whenever the app prints its '#ready' prompt,
 until the run starts ('#env'). It works with or without a reset, so a second job set can
