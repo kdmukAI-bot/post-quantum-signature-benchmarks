@@ -295,19 +295,19 @@ Blockstream's figures, transcribed:
 **Table 10. Our boards at level 3 against Blockstream's wallets: hash-based signing and
 key generation, seconds**
 
-| Operation | Pi Zero | ESP32-P4 | ESP32-S3 | Jade Plus | Trezor Safe 3/5/7 [26] | Ledger Nano gen5/S+ | BitBox02 Nova |
-|---|---|---|---|---|---|---|---|
-| SLH-DSA-SHA2-128s sign | 5.030 | 6.198 | 7.337 | 52.85 | 65.31 | 120.12 | 100.1 |
-| SPHINCS+ 2^40 sign | 3.912 | 4.886 | 5.794 | 43.28 | 53.45 | 94.98 | 78.4 |
-| SHRINCS-B sign | 1.271 | 2.081 | 2.562 | 21.75 | 25.82 | 41.83 | 30.9 |
-| SHRINCS-L sign, swn=96 | 0.1146 | 0.1984 | 0.2607 | 3.31 | 3.01 | 8.04 | 5.5 |
-| SHRINCS-L sign, swn=140 (expected) | 19.81 ± 0.003 | 31.28 ± 0.002 | 45.65 ± 0.0005 | 225.63 | 264.74 | 572.78 | 334.6 |
-| XMSS 2^10 sign | 4.081 | 7.201 | 9.541 | 57.8 | 75.63 | 118.2 | 79.6 |
-| SLH-DSA-SHA2-128s keygen | 0.6553 | 0.7940 | 0.9377 | 7.06 | 8.64 | 15.82 | 12.7 |
-| SPHINCS+ 2^40 keygen | 0.6555 | 0.7939 | 0.9377 | 7.06 | 8.64 | 15.82 | 12.7 |
-| SHRINCS-L keygen | 0.1149 | 0.1983 | 0.2537 | 1.81 | 2.35 | 6.1 | 3.3 |
-| SHRINCS-B keygen | 1.275 | 2.086 | 2.562 | 18.87 | 22.8 | 40.18 | 28.8 |
-| XMSS 2^10 keygen | 4.081 | 7.197 | 9.536 | 57.78 | 75.64 | 117.85 | 79.5 |
+| Operation | Pi Zero 2 W | Pi Zero | ESP32-P4 | ESP32-S3 | RP2350 | Jade Plus | Trezor Safe 3/5/7 [26] | Ledger Nano gen5/S+ | BitBox02 Nova |
+|---|---|---|---|---|---|---|---|---|---|
+| SLH-DSA-SHA2-128s sign | 2.483 | 5.030 | 6.198 | 7.337 | 9.737 | 52.85 | 65.31 | 120.12 | 100.1 |
+| SPHINCS+ 2^40 sign | 1.934 | 3.912 | 4.886 | 5.794 | 7.708 | 43.28 | 53.45 | 94.98 | 78.4 |
+| SHRINCS-B sign | 0.6559 | 1.271 | 2.081 | 2.562 | 3.561 | 21.75 | 25.82 | 41.83 | 30.9 |
+| SHRINCS-L sign, swn=96 | 0.05950 | 0.1146 | 0.1984 | 0.2607 | 0.3290 | 3.31 | 3.01 | 8.04 | 5.5 |
+| SHRINCS-L sign, swn=140 (expected) | 9.890 ± 0.00004 | 19.81 ± 0.003 | 31.28 ± 0.002 | 45.65 ± 0.0005 | 68.10 ± 0.002 | 225.63 | 264.74 | 572.78 | 334.6 |
+| XMSS 2^10 sign | 2.157 | 4.081 | 7.201 | 9.541 | 12.33 | 57.8 | 75.63 | 118.2 | 79.6 |
+| SLH-DSA-SHA2-128s keygen | 0.3225 | 0.6553 | 0.7940 | 0.9377 | 1.242 | 7.06 | 8.64 | 15.82 | 12.7 |
+| SPHINCS+ 2^40 keygen | 0.3228 | 0.6555 | 0.7939 | 0.9377 | 1.241 | 7.06 | 8.64 | 15.82 | 12.7 |
+| SHRINCS-L keygen | 0.05955 | 0.1149 | 0.1983 | 0.2537 | 0.3220 | 1.81 | 2.35 | 6.1 | 3.3 |
+| SHRINCS-B keygen | 0.6558 | 1.275 | 2.086 | 2.562 | 3.568 | 18.87 | 22.8 | 40.18 | 28.8 |
+| XMSS 2^10 keygen | 2.154 | 4.081 | 7.197 | 9.536 | 12.35 | 57.78 | 75.64 | 117.85 | 79.5 |
 
 How long each device takes to sign, for four schemes: our boards, and every device in the
 other published reports we found. The sources used different code and timing methods, so

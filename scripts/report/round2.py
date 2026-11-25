@@ -936,7 +936,7 @@ def t_blockstream(L2):
     and in the round comparisons."""
     tab = "H4"
     _CUR[0] = tab
-    cols = [("pi", 0), ("p4", 0), ("s3", 0)]
+    cols = [(b, 0) for b in BOARDS]
     head = ["Operation"] + [BOARD_NAME[b] for b, dc in cols] + L2.PUB_COLS
     ours = dict((
         (("slh_dsa_sign", ""), ("Signing", "SLH-DSA-SHA2-128s")),

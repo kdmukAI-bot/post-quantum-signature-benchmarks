@@ -1181,9 +1181,11 @@ key generation, seconds</caption>
 <thead>
 <tr>
 <th><span class="nw">Operation</span></th>
+<th class="num"><span class="nw">Pi Zero 2</span> <span class="nw">W</span></th>
 <th class="num"><span class="nw">Pi Zero</span></th>
 <th class="num"><span class="nw">ESP32-P4</span></th>
 <th class="num"><span class="nw">ESP32-S3</span></th>
+<th class="num"><span class="nw">RP2350</span></th>
 <th class="num"><span class="nw">Jade Plus</span></th>
 <th class="num"><span class="nw">Trezor Safe 3/5/7</span><span class="fnwrap"> <a class="fnref" href="#fn-26">[26]</a></span></th>
 <th class="num"><span class="nw">Ledger Nano gen5/S+</span></th>
@@ -1193,9 +1195,11 @@ key generation, seconds</caption>
 <tbody>
 <tr>
 <td><span class="nw">SLH-DSA-SHA2-128s sign</span></td>
+<td class="num">2.483</td>
 <td class="num">5.030</td>
 <td class="num">6.198</td>
 <td class="num">7.337</td>
+<td class="num">9.737</td>
 <td class="num">52.85</td>
 <td class="num">65.31</td>
 <td class="num">120.12</td>
@@ -1203,9 +1207,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SPHINCS+ 2^40 sign</span></td>
+<td class="num">1.934</td>
 <td class="num">3.912</td>
 <td class="num">4.886</td>
 <td class="num">5.794</td>
+<td class="num">7.708</td>
 <td class="num">43.28</td>
 <td class="num">53.45</td>
 <td class="num">94.98</td>
@@ -1213,9 +1219,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SHRINCS-B sign</span></td>
+<td class="num">0.6559</td>
 <td class="num">1.271</td>
 <td class="num">2.081</td>
 <td class="num">2.562</td>
+<td class="num">3.561</td>
 <td class="num">21.75</td>
 <td class="num">25.82</td>
 <td class="num">41.83</td>
@@ -1223,9 +1231,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SHRINCS-L sign,</span> <span class="nw">swn=96</span></td>
+<td class="num">0.05950</td>
 <td class="num">0.1146</td>
 <td class="num">0.1984</td>
 <td class="num">0.2607</td>
+<td class="num">0.3290</td>
 <td class="num">3.31</td>
 <td class="num">3.01</td>
 <td class="num">8.04</td>
@@ -1233,9 +1243,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SHRINCS-L sign,</span> <span class="nw">swn=140</span> <span class="nw">(expected)</span></td>
+<td class="num">9.890 ± 0.00004</td>
 <td class="num">19.81 ± 0.003</td>
 <td class="num">31.28 ± 0.002</td>
 <td class="num">45.65 ± 0.0005</td>
+<td class="num">68.10 ± 0.002</td>
 <td class="num">225.63</td>
 <td class="num">264.74</td>
 <td class="num">572.78</td>
@@ -1243,9 +1255,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">XMSS 2^10 sign</span></td>
+<td class="num">2.157</td>
 <td class="num">4.081</td>
 <td class="num">7.201</td>
 <td class="num">9.541</td>
+<td class="num">12.33</td>
 <td class="num">57.8</td>
 <td class="num">75.63</td>
 <td class="num">118.2</td>
@@ -1253,9 +1267,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SLH-DSA-SHA2-128s keygen</span></td>
+<td class="num">0.3225</td>
 <td class="num">0.6553</td>
 <td class="num">0.7940</td>
 <td class="num">0.9377</td>
+<td class="num">1.242</td>
 <td class="num">7.06</td>
 <td class="num">8.64</td>
 <td class="num">15.82</td>
@@ -1263,9 +1279,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SPHINCS+ 2^40 keygen</span></td>
+<td class="num">0.3228</td>
 <td class="num">0.6555</td>
 <td class="num">0.7939</td>
 <td class="num">0.9377</td>
+<td class="num">1.241</td>
 <td class="num">7.06</td>
 <td class="num">8.64</td>
 <td class="num">15.82</td>
@@ -1273,9 +1291,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SHRINCS-L keygen</span></td>
+<td class="num">0.05955</td>
 <td class="num">0.1149</td>
 <td class="num">0.1983</td>
 <td class="num">0.2537</td>
+<td class="num">0.3220</td>
 <td class="num">1.81</td>
 <td class="num">2.35</td>
 <td class="num">6.1</td>
@@ -1283,9 +1303,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">SHRINCS-B keygen</span></td>
+<td class="num">0.6558</td>
 <td class="num">1.275</td>
 <td class="num">2.086</td>
 <td class="num">2.562</td>
+<td class="num">3.568</td>
 <td class="num">18.87</td>
 <td class="num">22.8</td>
 <td class="num">40.18</td>
@@ -1293,9 +1315,11 @@ key generation, seconds</caption>
 </tr>
 <tr>
 <td><span class="nw">XMSS 2^10 keygen</span></td>
+<td class="num">2.154</td>
 <td class="num">4.081</td>
 <td class="num">7.197</td>
 <td class="num">9.536</td>
+<td class="num">12.35</td>
 <td class="num">57.78</td>
 <td class="num">75.64</td>
 <td class="num">117.85</td>
