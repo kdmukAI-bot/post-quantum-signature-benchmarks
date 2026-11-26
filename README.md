@@ -25,14 +25,14 @@ results have not been independently reviewed.
 
 | Path | Contents |
 |---|---|
-| `index.html`, `methods.html`, `assets/` | The report pages, generated; served by GitHub Pages |
+| `index.html`, `methods.html`, `assets/` | The report pages and their share preview image, generated; served by GitHub Pages |
 | `harness/common/` | Benchmark operations shared by every board |
 | `harness/linux/` | Host, Pi Zero, and Pi Zero 2 W builds (Makefile; options in its header) |
 | `harness/esp-idf/` | ESP32-S3 and ESP32-P4 builds (ESP-IDF v5.5.5) |
 | `harness/pico/` | RP2350 build (Pico SDK 2.3.1, FreeRTOS SMP; pinned Docker image in `docker/`) |
 | `third_party/` | Submodules at pinned commits: `jade-hbs` (DmitriiKJ/Jade @ f5c90a5e), `mldsa-native` (v2.0.0), `c-fn-dsa` (@ 1b858880) |
 | `scripts/` | Builds, run plans and queues, capture, correctness checks, fits, and the independent-verification scripts |
-| `scripts/report/` | The report generator (`fill.py`) and page builder (`build_pages.py`) |
+| `scripts/report/` | The report generator (`fill.py`), page builder (`build_pages.py`), and share image renderer (`social_card.py`) |
 | `results/summary.csv` | One row per measured configuration, generated |
 | `results/combined_draft.md` | The generated Markdown the pages are built from |
 | `results/published/`, `results/derived/` | Figures transcribed from other reports, and the generated fit coefficients |
@@ -82,7 +82,12 @@ missing:
 ```
 .venv/bin/python -I scripts/report/fill.py
 .venv/bin/python -I scripts/report/build_pages.py
+python3 -I scripts/report/social_card.py
 ```
+
+The last step renders the share preview image (`assets/social-card.jpg`) from the card
+page that `build_pages.py` writes (`assets/social-card.html`); it needs Firefox and
+ImageMagick.
 
 ## License
 

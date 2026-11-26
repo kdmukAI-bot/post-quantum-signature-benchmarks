@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- Source of assets/social-card.jpg (1200x630), written by scripts/report/build_pages.py
+     from Table 1's chart; render it with scripts/report/social_card.py. -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Post-quantum signature benchmarks on SeedSigner-class hardware: share card</title>
+<script>
+  var q = new URLSearchParams(location.search);
+  document.documentElement.setAttribute('data-theme',
+    q.get('theme') === 'light' ? 'light' : 'dark');
+  // ?scale=2 lays the card out at twice the size, for a sharper render to downsample.
+  if (q.get('scale')) document.documentElement.style.zoom = q.get('scale');
+</script>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="series.css">
+<style>
+/* Page width: 55rem, close to GitHub's 980px content width at the laptop font size;
+   phones are unaffected, since the column already fills the screen there. */
+:root{ --measure:55rem; }
+.tablewrap td.num, .tablewrap th.num{ text-align:right; }
+.tablewrap th{ white-space:normal; font-family:var(--sans); font-size:.86rem;
+  letter-spacing:0; text-transform:none; color:var(--ink); font-weight:650;
+  line-height:1.3; vertical-align:bottom; }
+.tablewrap .nw{ white-space:nowrap; }
+.tablewrap tr.gap td{ height:1.1rem; padding:0; border:0; background:none; }
+.tablewrap td.child{ padding-left:1.9rem; }
+.tablewrap.summary{ max-width:36rem; }
+.tablewrap.summary table{ font-size:1.12rem; }
+.tablewrap.summary td{ padding:.6rem 1rem; vertical-align:baseline; }
+.tablewrap.summary td.child{ padding-left:2rem; }
+.tablewrap.summary td.num{ font-family:var(--sans); font-size:1.4rem; font-weight:700;
+  color:var(--ink); font-variant-numeric:tabular-nums; }
+:root{ --gain:#00875a; --loss:#d64545; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --gain:#1fa37f;
+  --loss:#e35d5d; } }
+:root[data-theme="dark"]{ --gain:#1fa37f; --loss:#e35d5d; }
+.cbars{ margin:1.6rem 0; }
+.cbar-title{ font-family:var(--sans); font-size:1.12rem; font-weight:700; line-height:1.35;
+  color:var(--ink); padding:.7rem .75rem .65rem; background:var(--raised);
+  border-top:3px solid var(--accent); }
+.cbar-grid{ display:grid; grid-template-columns:max-content 1fr; }
+.cbar-row{ display:contents; }
+.cbar-name, .cbar-plot{ border-bottom:1px solid var(--rule); }
+.cbar-name{ padding:.55rem .75rem; font-size:1.04rem; line-height:1.3; white-space:nowrap;
+  display:flex; align-items:center; }
+.cbar-plot{ position:relative; min-height:2.6rem; }
+.cbar-plot::before{ content:""; position:absolute; top:0; bottom:-1px; left:var(--x0);
+  margin-left:-1px; border-left:2px solid var(--ink); }
+.cbar-axis .cbar-name, .cbar-axis .cbar-plot{ border-bottom:1px solid var(--rule-strong); }
+.cbar-axis .cbar-plot{ min-height:2rem; }
+@media (max-width:560px){
+  .cbar-grid{ grid-template-columns:1fr; }
+  .cbar-name{ white-space:normal; border-bottom:0; padding:.5rem .5rem 0; }
+  .cbar-axis .cbar-name{ display:none; }
+  .cbar-plot{ min-height:2.3rem; }
+}
+.cbar{ position:absolute; top:50%; height:20px; margin-top:-10px; }
+.cbar.up{ background:var(--gain); border-radius:0 4px 4px 0; }
+.cbar.down{ background:var(--loss); border-radius:4px 0 0 4px; }
+.cbar-break{ position:absolute; top:-4px; bottom:-4px; width:6px; margin-left:-3px;
+  background:var(--ground); transform:skewX(-24deg); }
+.cbar-val, .cbar-dir{ position:absolute; top:50%; transform:translateY(-50%);
+  white-space:nowrap; }
+.cbar-val{ font-weight:700; font-size:1.12rem; color:var(--ink);
+  font-variant-numeric:tabular-nums; }
+.cbar-val.muted{ font-weight:400; color:var(--muted); font-size:1rem; }
+.cbar-dir{ font-size:.82rem; color:var(--muted); }
+.cbar-note{ font-size:.82rem; color:var(--muted); margin:.6rem 0 .3rem; }
+.cbar-table summary{ cursor:pointer; font-size:.86rem; color:var(--muted); }
+.tablewrap.summary td.num.up{ color:var(--pass); }
+.tablewrap.summary td.num.down{ color:var(--accent); }
+.tablewrap.summary th{ font-size:1rem; }
+.tablewrap.summary caption{ font-size:1.12rem; }
+.tablewrap caption{ caption-side:top; text-align:left; font-family:var(--sans);
+  font-size:1rem; font-weight:700; line-height:1.35; color:var(--ink);
+  padding:.7rem .75rem .65rem; background:var(--raised);
+  border-top:3px solid var(--accent); }
+.tablewrap tr.group td{ background:var(--raised); color:var(--ink); padding-top:.5rem;
+  padding-bottom:.5rem; border-top:1px solid var(--rule-strong);
+  border-bottom:1px solid var(--rule-strong); }
+.tablewrap .fnwrap{ white-space:normal; }
+section.footnotes{ margin-top:3rem; font-size:.86rem; color:var(--muted); }
+section.footnotes ol{ padding-left:1.4rem; }
+hr.footnotes-sep{ border:0; border-top:1px solid var(--rule); margin:3rem 0 1rem; }
+.footnote-ref a, .footnote-backref{ text-decoration:none; }
+
+html, body{ margin:0; padding:0; background:var(--ground); }
+body{ width:1200px; height:630px; overflow:hidden; box-sizing:border-box;
+  position:relative; padding:38px 60px 30px 68px; display:grid;
+  grid-template-rows:auto 1fr auto;
+  font-family:var(--sans); color:var(--ink); }
+body::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:8px;
+  background:var(--accent); }
+h1{ font-size:50px; line-height:1.04; letter-spacing:-.015em; font-weight:650;
+  margin:0 0 16px; text-wrap:balance; }
+.cbars{ margin:0; align-self:center; --pl:84px; --pr:76px; }
+.chart-label{ font-size:23px; font-weight:600; color:var(--muted); margin:0 0 4px; }
+.cbar-name{ font-size:21px; padding:0 22px 0 0; }
+.cbar-plot{ min-height:32px; }
+.cbar-axis .cbar-plot{ min-height:25px; }
+.cbar-row:last-child > *{ border-bottom:0; }
+.cbar{ height:18px; margin-top:-9px; }
+.cbar-val{ font-size:22px; }
+.cbar-dir{ font-size:19px; }
+.foot{ display:flex; justify-content:space-between; align-items:baseline;
+  border-top:1px solid var(--rule); padding-top:12px; margin-top:10px;
+  font-family:var(--mono); font-size:19px; color:var(--muted); }
+.foot b{ font-weight:400; color:var(--faint); }
+</style>
+</head>
+<body>
+<h1>Post-quantum signature benchmarks on SeedSigner-class hardware</h1>
+<figure class="cbars" style="--u:calc((100% - var(--pl) - var(--pr)) / 13.7000); --x0:calc(var(--pl) + var(--u) * 1.2000)">
+<p class="chart-label">Signing speed relative to the Jade Plus (approximate)</p>
+<div class="cbar-grid">
+<div class="cbar-row cbar-axis" aria-hidden="true"><div class="cbar-name"></div><div class="cbar-plot"><span class="cbar-dir" style="right:calc(100% - var(--x0) + .5rem)">&larr; slower</span><span class="cbar-dir" style="left:calc(var(--x0) + .5rem)">faster &rarr;</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Pi Zero 2 W</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 12.5000)" title="Pi Zero 2 W: 22x as fast as the Jade Plus (bar cut short to fit)"><span class="cbar-break" style="left:90.00%"></span></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 12.5000 + .45rem)">+22x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Pi Zero</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 10.0000)" title="Pi Zero: 11x as fast as the Jade Plus"></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 10.0000 + .45rem)">+11x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>ESP32-P4</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 7.7000)" title="ESP32-P4: 8.7x as fast as the Jade Plus"></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 7.7000 + .45rem)">+8.7x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>ESP32-S3</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 6.3000)" title="ESP32-S3: 7.3x as fast as the Jade Plus"></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 6.3000 + .45rem)">+7.3x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>RP2350</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 4.5000)" title="RP2350: 5.5x as fast as the Jade Plus"></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 4.5000 + .45rem)">+5.5x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Trezor Safe 7 (test build)</span></div><div class="cbar-plot"><span class="cbar up" style="left:var(--x0);width:calc(var(--u) * 1.7000)" title="Trezor Safe 7 (test build) [2]: 2.7x as fast as the Jade Plus"></span><span class="cbar-val" style="left:calc(var(--x0) + var(--u) * 1.7000 + .45rem)">+2.7x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Jade Plus (baseline)</span></div><div class="cbar-plot"><span class="cbar-val" style="left:calc(var(--x0) + .45rem)">1.0x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Trezor Safe 3/5/7</span></div><div class="cbar-plot"><span class="cbar down" style="right:calc(100% - var(--x0));width:calc(var(--u) * 0.2000)" title="Trezor Safe 3/5/7: takes 1.2x as long as the Jade Plus"></span><span class="cbar-val" style="right:calc(calc(100% - var(--x0)) + var(--u) * 0.2000 + .45rem)">−1.2x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>BitBox02 Nova</span></div><div class="cbar-plot"><span class="cbar down" style="right:calc(100% - var(--x0));width:calc(var(--u) * 0.9000)" title="BitBox02 Nova: takes 1.9x as long as the Jade Plus"></span><span class="cbar-val" style="right:calc(calc(100% - var(--x0)) + var(--u) * 0.9000 + .45rem)">−1.9x</span></div></div>
+<div class="cbar-row"><div class="cbar-name"><span>Ledger Nano gen5/S+</span></div><div class="cbar-plot"><span class="cbar down" style="right:calc(100% - var(--x0));width:calc(var(--u) * 1.2000)" title="Ledger Nano gen5/S+: takes 2.2x as long as the Jade Plus"></span><span class="cbar-val" style="right:calc(calc(100% - var(--x0)) + var(--u) * 1.2000 + .45rem)">−2.2x</span></div></div>
+</div>
+</figure>
+<div class="foot"><span>Benchmark &middot; 5 boards</span><span><b>kdmukai-bot.github.io/</b>post-quantum-signature-benchmarks</span></div>
+</body>
+</html>

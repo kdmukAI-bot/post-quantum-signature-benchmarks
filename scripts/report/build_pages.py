@@ -3,6 +3,10 @@ the analysis series' style: index.html (results) and methods.html (the draft's a
 at the repository root, which GitHub Pages serves. The pages link assets/series.css and
 assets/fonts.css.
 
+It also writes assets/social-card.html, the source of the share preview image
+(assets/social-card.jpg, rendered by scripts/report/social_card.py), from the same chart
+data as Table 1, and puts Open Graph and Twitter card tags on both pages.
+
 Run from the repository root, after fill.py:
     .venv/bin/python -I scripts/report/build_pages.py
 """
@@ -17,6 +21,12 @@ from markdown_it import MarkdownIt
 from mdit_py_plugins.footnote import footnote_plugin
 
 ROOT = Path(__file__).resolve().parents[2]
+# The published site, for the share tags, which need absolute URLs.
+SITE_URL = "https://kdmukai-bot.github.io/post-quantum-signature-benchmarks/"
+CARD_IMAGE = "assets/social-card.jpg"
+CARD_SRC = ROOT / "assets" / "social-card.html"
+# Table 1's chart as summary_chart drew it, for the share card and its alt text.
+CARD = dict()
 SRC = ROOT / "results" / "combined_draft.md"
 OUT = ROOT / "index.html"
 # The masthead's Updated date: bump it with every substantive change to the published
@@ -405,6 +415,9 @@ def summary_chart(title, heads, rows, is_group, table_html):
         out.append(f'<div class="cbar-row"><div class="cbar-name"><span>{it["name"]}</span>'
                    f'</div><div class="cbar-plot">{plot}</div></div>')
     out.append("</div>")
+    CARD.update(title=strip_tags(title), geo=geo, grid="\n".join(out[2:]),
+                items=[(re.sub(r"\s*\[\d+\]", "", plain(it["name"])), it["val"])
+                       for it in items])
     if cut:
         out.append(f'<p class="cbar-note">The {plain(cut["name"])} bar is cut short to fit.</p>')
     out.append(f"<details class=\"cbar-table\"><summary>Show as a table</summary>{table_html}"
@@ -432,9 +445,24 @@ def toc_html(toc, labels=None):
     return "\n".join(out)
 
 
-def page(title, standfirst, body, toc, meta, provenance="", toc_labels=None):
+def share_tags(title, description, url, alt):
+    """Open Graph and Twitter card tags: the page's title and description, and the share
+    card image (1200x630) with its alt text."""
+    image = SITE_URL + CARD_IMAGE
+    tags = [("name", "description", description), ("property", "og:type", "article"),
+            ("property", "og:title", title), ("property", "og:description", description),
+            ("property", "og:url", url), ("property", "og:image", image),
+            ("property", "og:image:width", "1200"),
+            ("property", "og:image:height", "630"), ("property", "og:image:alt", alt),
+            ("name", "twitter:card", "summary_large_image"),
+            ("name", "twitter:image", image), ("name", "twitter:image:alt", alt)]
+    return "\n".join(f'<meta {k}="{v}" content="{html.escape(c)}">' for k, v, c in tags)
+
+
+def page(title, standfirst, body, toc, meta, provenance="", toc_labels=None, share=""):
     """One page as the published site will show it: no preview banner, no build details.
-    meta is a list of (label, html) pairs for the masthead's facts row."""
+    meta is a list of (label, html) pairs for the masthead's facts row; share is the
+    head's share tags."""
     meta_html = "\n".join(f"    <div><dt>{k}</dt><dd>{v}</dd></div>" for k, v in meta)
     stand = f'  <p class="standfirst">{standfirst}</p>\n' if standfirst else ""
     prov = (f'  <div class="note"><span class="tag">Provenance</span>\n  <p>{provenance}</p>'
@@ -445,6 +473,7 @@ def page(title, standfirst, body, toc, meta, provenance="", toc_labels=None):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
+{share}
 <link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/series.css">
 <style>{EXTRA_CSS}</style>
@@ -478,6 +507,75 @@ def page(title, standfirst, body, toc, meta, provenance="", toc_labels=None):
   }});
 }})();
 </script>
+</body>
+</html>
+"""
+
+# The share card: 1200x630, mostly seen at about a third of that size, so nothing is set
+# below 19px. It follows the analysis series' cards (an accent bar down the left edge, the
+# write-up's title set large, a footer with the address) and uses the page's own fonts,
+# colors, and chart CSS, with only the sizes changed.
+CARD_CSS = """
+html, body{ margin:0; padding:0; background:var(--ground); }
+body{ width:1200px; height:630px; overflow:hidden; box-sizing:border-box;
+  position:relative; padding:38px 60px 30px 68px; display:grid;
+  grid-template-rows:auto 1fr auto;
+  font-family:var(--sans); color:var(--ink); }
+body::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:8px;
+  background:var(--accent); }
+h1{ font-size:50px; line-height:1.04; letter-spacing:-.015em; font-weight:650;
+  margin:0 0 16px; text-wrap:balance; }
+.cbars{ margin:0; align-self:center; --pl:84px; --pr:76px; }
+.chart-label{ font-size:23px; font-weight:600; color:var(--muted); margin:0 0 4px; }
+.cbar-name{ font-size:21px; padding:0 22px 0 0; }
+.cbar-plot{ min-height:32px; }
+.cbar-axis .cbar-plot{ min-height:25px; }
+.cbar-row:last-child > *{ border-bottom:0; }
+.cbar{ height:18px; margin-top:-9px; }
+.cbar-val{ font-size:22px; }
+.cbar-dir{ font-size:19px; }
+.foot{ display:flex; justify-content:space-between; align-items:baseline;
+  border-top:1px solid var(--rule); padding-top:12px; margin-top:10px;
+  font-family:var(--mono); font-size:19px; color:var(--muted); }
+.foot b{ font-weight:400; color:var(--faint); }
+"""
+
+
+def social_card_html(page_title, n_boards):
+    """assets/social-card.html: the page title, then Table 1's chart under the chart's own
+    title, with a footer giving the board count and the site address. Dark by default;
+    ?theme=light renders the light version from the same file, and ?scale=2 renders it at
+    twice the size."""
+    chart_title = re.sub(r"^Table \S+\.\s*", "", CARD["title"])
+    grid = re.sub(r'\s*<a class="fnref"[^>]*>\[\d+\]</a>', "", CARD["grid"])
+    geo = re.sub(r"--pl:[^;]*; --pr:[^;]*; ", "", CARD["geo"])
+    facts = "Benchmark" + (f" &middot; {n_boards} boards" if n_boards else "")
+    host, path = SITE_URL.split("://", 1)[1].rstrip("/").split("/", 1)
+    return f"""<!doctype html>
+<!-- Source of assets/social-card.jpg (1200x630), written by scripts/report/build_pages.py
+     from Table 1's chart; render it with scripts/report/social_card.py. -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>{html.escape(page_title)}: share card</title>
+<script>
+  var q = new URLSearchParams(location.search);
+  document.documentElement.setAttribute('data-theme',
+    q.get('theme') === 'light' ? 'light' : 'dark');
+  // ?scale=2 lays the card out at twice the size, for a sharper render to downsample.
+  if (q.get('scale')) document.documentElement.style.zoom = q.get('scale');
+</script>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="series.css">
+<style>{EXTRA_CSS}{CARD_CSS}</style>
+</head>
+<body>
+<h1>{html.escape(page_title)}</h1>
+<figure class="cbars" style="{geo}">
+<p class="chart-label">{html.escape(chart_title)}</p>
+{grid}
+</figure>
+<div class="foot"><span>{facts}</span><span><b>{host}/</b>{path}</span></div>
 </body>
 </html>
 """
@@ -552,10 +650,24 @@ def main():
     n = board_count(main_md)
     meta = ([("Updated", updated), ("Revision", rev)] + ([("Boards", str(n))] if n else [])
             + [("Pages", pages)])
-    OUT.write_text(page(title, standfirst, body, toc, meta, prov, {1: "Summary", 2: "Detail"}))
+    cap = re.sub(r"^Table \S+\.\s*", "", CARD.get("title", ""))
+    alt = (f"Bar chart: {cap[:1].lower() + cap[1:]}. "
+           + "; ".join(f"{who} {val}" for who, val in CARD.get("items", [])) + ".")
+    words = "one two three four five six seven eight nine ten".split()
+    count = words[n - 1] if n and n <= len(words) else str(n)
+    desc = (f"Post-quantum signature schemes timed on {count} boards in the SeedSigner "
+            "ecosystem and compared with the hardware wallets in Blockstream's tests.")
+    m_desc = ("How the post-quantum signature benchmarks were built, run, timed, and "
+              "checked.")
+    OUT.write_text(page(title, standfirst, body, toc, meta, prov,
+                        {1: "Summary", 2: "Detail"},
+                        share_tags(title, desc, SITE_URL, alt)))
     m_meta = [("Updated", updated), ("Revision", rev), ("Pages", pages)]
+    m_full = f"{m_title}: {title}"
     (OUT.parent / "methods.html").write_text(
-        page(f"{m_title}: {title}", "", m_body, m_toc, m_meta, prov))
+        page(m_full, "", m_body, m_toc, m_meta, prov,
+             share=share_tags(m_full, m_desc, SITE_URL + "methods.html", alt)))
+    CARD_SRC.write_text(social_card_html(title, n))
     unresolved = sorted(set(
         re.findall(r'href="#([^"]+)"', body)) - ids) + sorted(set(
         re.findall(r'href="#([^"]+)"', m_body)) - m_ids)
